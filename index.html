@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Zinkk2</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- LOBBY -->
+  <div id="lobby" class="screen">
+    <button id="settingsBtn" class="settings-btn" aria-label="Settings">⚙</button>
+
+    <div id="settingsPanel" class="settings-panel hidden">
+      <h2 class="settings-title">Controls</h2>
+
+      <div class="settings-row">
+        <span>Input mode</span>
+        <div class="segmented" id="controlModeGroup">
+          <button data-mode="auto" class="seg-btn">Auto</button>
+          <button data-mode="pc" class="seg-btn">PC</button>
+          <button data-mode="mobile" class="seg-btn">Mobile</button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <span>Joystick size</span>
+        <input id="joystickSize" type="range" min="70" max="160" value="110" />
+      </div>
+
+      <button id="closeSettings" class="btn btn-spectate close-settings">Done</button>
+    </div>
+
+    <div class="lobby-card">
+      <h1 class="logo">ZINKK<span class="logo-accent">2</span></h1>
+      <p class="tagline">Square tanks. Two rooms. No mercy.</p>
+
+      <label class="name-label" for="nameInput">Callsign</label>
+      <input id="nameInput" class="name-input" maxlength="14" placeholder="Tank01" />
+
+      <div id="roomList" class="room-list">
+        <!-- room rows injected by JS -->
+      </div>
+
+      <p id="lobbyError" class="lobby-error"></p>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="screen hidden">
+    <canvas id="canvas"></canvas>
+    <div class="hud">
+      <div class="hud-room" id="hudRoom">Room 1</div>
+      <div class="hud-health-wrap">
+        <div class="hud-health-bar"><div id="hudHealthFill" class="hud-health-fill"></div></div>
+        <span id="hudHealthText">100</span>
+      </div>
+      <div class="hud-stats" id="hudStats">Kills 0 · Deaths 0</div>
+      <button id="leaveBtn" class="leave-btn">Leave</button>
+    </div>
+    <div id="spectateBanner" class="spectate-banner hidden">SPECTATING</div>
+    <div id="deathBanner" class="death-banner hidden">Destroyed — respawning…</div>
+
+    <div id="touchControls" class="touch-controls hidden">
+      <div id="moveStick" class="stick-base">
+        <div class="stick-handle"></div>
+      </div>
+      <div id="aimStick" class="stick-base stick-base-right">
+        <div class="stick-handle"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
