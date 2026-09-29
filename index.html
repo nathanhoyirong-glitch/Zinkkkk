@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
@@ -28,9 +28,8 @@
     --panel-rgb: 16,26,21;
     --on-accent: #07120c;
   }
-  /* This console defaults to a fixed dark tactical theme regardless of
-     system preference -- like a physical instrument panel, not a themed
-     page. A light variant is available as an explicit user choice
+  /* This console defaults to the light (white) theme regardless of
+     system preference. A dark variant is available as an explicit user choice
      (Settings -> Display), not tied to prefers-color-scheme. */
   @media (prefers-color-scheme: light) { :root { color-scheme: dark; } }
 
@@ -54,7 +53,7 @@
   }
 
   * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; }
+  html, body { margin:0; padding:0; touch-action:manipulation; }
   body {
     background: var(--bg);
     color: var(--ink);
@@ -237,6 +236,49 @@
   }
   .loadout-tile:hover, .loadout-tile:focus-visible { transform: scale(1.06); border-color:var(--ink); }
   .loadout-tile img { width:46px; height:auto; pointer-events:none; }
+  .loadout-tile.captioned { width:84px; height:84px; flex-direction:column; gap:6px; }
+  .loadout-tile.captioned img { width:64px; }
+  .loadout-tile.captioned span { font-size:8px; letter-spacing:0.08em; color:var(--ink-dim); pointer-events:none; }
+
+  /* ---------- diep.io-style stat allocation panel ---------- */
+  .stats-panel {
+    position:absolute; left:10px; bottom:max(156px, calc(148px + env(safe-area-inset-bottom)));
+    width:min(268px, calc(100% - 20px)); z-index:9; pointer-events:none;
+    display:none; flex-direction:column;
+  }
+  .stats-panel.show { display:flex; pointer-events:auto; }
+  .stats-points-tag {
+    position:absolute; top:-16px; right:6px; background:#e8b13a; color:#241a05;
+    font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:0.02em;
+    padding:3px 10px 3px 14px; transform:rotate(-14deg); box-shadow:0 2px 5px rgba(0,0,0,0.35);
+    border-radius:2px; transition: opacity .15s ease;
+  }
+  .stats-points-tag.hide { opacity:0; }
+  .stat-row {
+    position:relative; display:flex; align-items:center; height:22px; max-height:22px; width:100%;
+    background:rgba(35,40,43,0.5); border-radius:11px; border:none; padding:0; overflow:hidden;
+    font-family:var(--mono); cursor:default; box-shadow:0 2px 4px rgba(0,0,0,0.3);
+    margin-bottom:5px; opacity:1; outline:none; -webkit-tap-highlight-color:transparent;
+    transition: max-height .15s ease, opacity .15s ease, margin-bottom .15s ease;
+  }
+  .stat-row:focus, .stat-row:focus-visible { outline:none; box-shadow:0 2px 4px rgba(0,0,0,0.3); }
+  .stat-row.disabled { max-height:0; opacity:0; margin-bottom:0; pointer-events:none; }
+  .stat-fill {
+    position:absolute; top:0; left:0; bottom:0; width:0%; background:var(--stat-color, #6ee39a);
+    opacity:0.4; transition: width .18s ease; pointer-events:none;
+  }
+  .stat-row::after {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background-image: repeating-linear-gradient(90deg,
+      rgba(0,0,0,0.35) 0, rgba(0,0,0,0.35) 1px,
+      transparent 1px, transparent calc(100% / 7));
+  }
+  .stat-label {
+    position:relative; flex:1 1 auto; padding-left:14px; padding-right:14px; font-size:10.5px; font-weight:700;
+    color:#f2f4f2; letter-spacing:0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .stat-label .stat-key { color:#9aa3a0; font-weight:600; margin-left:5px; font-size:10px; }
+  .stat-row.maxed .stat-label { color:#8f9a95; }
 
   /* twin virtual joysticks -- left drives movement, right aims the
      barrel and fires while pushed out. Shown on every platform so
@@ -330,7 +372,7 @@
   .map-card .md { font-size:10px; line-height:1.3; }
 
   /* ---------- command bar + admin panel ---------- */
-  .cmdbar { position:absolute; top:56px; left:50%; transform:translateX(-50%); z-index:9; display:none; width:min(320px, calc(100% - 28px)); }
+  .cmdbar { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:65; display:none; width:min(320px, calc(100% - 28px)); }
   .cmdbar.show { display:block; }
   .cmdbar input { background:rgba(var(--panel-rgb),0.92); }
 
@@ -362,6 +404,12 @@
   .chatbar input:focus { outline:none; }
   .chat-send-btn { flex:0 0 auto; padding:0 12px; background:none; border:none; color:var(--green); font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:0.06em; }
   .chat-send-btn:hover { text-decoration:underline; }
+  /* tank-choice panel: header stays put, the tile grid / player list scrolls */
+  .admin-panel { display:flex; flex-direction:column; max-height:calc(100vh - 40px); max-height:calc(100dvh - 40px); }
+  .admin-panel .settings-head { flex:0 0 auto; }
+  .admin-panel .admin-grid { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:1px; }
+  .admin-panel #adminPlayerStep { flex:1 1 auto; min-height:0; flex-direction:column; }
+  .admin-panel #adminPlayerStep .wait-list { flex:1 1 auto; min-height:0; max-height:none; }
   .admin-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:16px; }
   .admin-tile { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px; background:var(--panel-2); border:1px solid var(--line-bright); color:var(--ink-dim); font-size:10px; letter-spacing:0.06em; font-weight:700; min-height:82px; justify-content:center; }
   .admin-tile img { height:52px; width:auto; max-width:100%; object-fit:contain; pointer-events:none; }
@@ -456,6 +504,7 @@
         <button class="btn-ghost" id="leaderboardBtn">&#127942; LEADERBOARD</button>
         <button class="btn-host" id="hostBtn">+ HOST</button>
         <button class="btn-ghost" id="lobbySettingsBtn">&#9881; SETTINGS</button>
+        <button class="btn-ghost" id="lobbyCmdBtn" aria-label="Commands">/ COMMANDS</button>
         <div class="callsign-chip"><span class="dot" id="lobbyLinkDot"></span><span id="lobbyLinkText">LINKING&hellip;</span></div>
       </div>
     </div>
@@ -504,7 +553,7 @@
         <div class="hud-left">
           <button class="hud-leave-btn" id="leaveBtn" aria-label="Leave sector">&larr;</button>
           <button class="hud-leave-btn" id="gameSettingsBtn" aria-label="Settings">&#9881;</button>
-          <button class="hud-leave-btn" id="cmdBtn" aria-label="Commands" style="display:none;">/</button>
+          <button class="hud-leave-btn" id="cmdBtn" aria-label="Commands">/</button>
           <button class="hud-leave-btn" id="chatBtn" aria-label="Chat">&#128172;<span class="chat-dot"></span></button>
           <b id="hudRoomName">SECTOR</b><span id="hudSelfHealth">HP 100</span>
           <span class="match-timer" id="matchTimer"></span>
@@ -513,8 +562,6 @@
         </div>
         <div class="score-strip" id="scoreStrip"></div>
       </div>
-
-      <div class="cmdbar" id="cmdBar"><input type="text" id="cmdInput" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type a command, e.g. /admin" /></div>
 
       <div class="chatbar" id="chatBar">
         <div class="chat-header" id="chatHeader"><span>CHAT</span><span class="chat-drag-dots">&#8942;&#8942;</span></div>
@@ -527,6 +574,42 @@
 
       <div class="killfeed" id="killfeed"></div>
       <div class="linkstat"><span class="dot" id="gameLinkDot"></span><span id="gameLinkText">LINK OK</span></div>
+
+      <div class="stats-panel" id="statsPanel">
+        <div class="stats-points-tag" id="statsPointsTag">&times;0</div>
+        <button type="button" class="stat-row" data-stat="regen" style="--stat-color:#e8a15a">
+          <span class="stat-fill" data-fill></span>
+          <span class="stat-label">HEALTH REGEN <span class="stat-key">[1]</span></span>
+        </button>
+        <button type="button" class="stat-row" data-stat="maxhp" style="--stat-color:#d85ee0">
+          <span class="stat-fill" data-fill></span>
+          <span class="stat-label">MAX HEALTH <span class="stat-key">[2]</span></span>
+        </button>
+        <button type="button" class="stat-row" data-stat="bodydmg" style="--stat-color:#9b6fe3">
+          <span class="stat-fill" data-fill></span>
+          <span class="stat-label">BODY DAMAGE <span class="stat-key">[3]</span></span>
+        </button>
+        <button type="button" class="stat-row" data-stat="bulletspeed" style="--stat-color:#5f96e8">
+          <span class="stat-fill" data-fill></span>
+          <span class="stat-label">BULLET SPEED <span class="stat-key">[4]</span></span>
+        </button>
+        <button type="button" class="stat-row" data-stat="penetration" style="--stat-color:#e3cf4f">
+          <span class="stat-fill" data-fill></span>
+          <span class="stat-label">BULLET PENETRATION <span class="stat-key">[5]</span></span>
+        </button>
+        <button type="button" class="stat-row" data-stat="bulletdmg" style="--stat-color:#e35e6e">
+          <span class="stat-fill" data-fill></span>
+          <span class="stat-label">BULLET DAMAGE <span class="stat-key">[6]</span></span>
+        </button>
+        <button type="button" class="stat-row" data-stat="reload" style="--stat-color:#7fd44f">
+          <span class="stat-fill" data-fill></span>
+          <span class="stat-label">RELOAD <span class="stat-key">[7]</span></span>
+        </button>
+        <button type="button" class="stat-row" data-stat="movespeed" style="--stat-color:#4fd4d0">
+          <span class="stat-fill" data-fill></span>
+          <span class="stat-label">MOVEMENT SPEED <span class="stat-key">[8]</span></span>
+        </button>
+      </div>
 
       <div class="loadout-choice" id="loadoutChoice">
         <div class="loadout-choice-label">NEW CANNON &mdash; PICK ONE</div>
@@ -549,6 +632,8 @@
   </section>
 
 </div>
+
+<div class="cmdbar" id="cmdBar"><input type="text" id="cmdInput" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type a command, e.g. /admin" /></div>
 
 <div class="toast" id="toast"></div>
 
@@ -623,10 +708,6 @@
       <button class="hud-leave-btn" id="adminLoginCloseBtn" aria-label="Close">&times;</button>
     </div>
     <div class="settings-row">
-      <div class="settings-label"><span>USERNAME</span></div>
-      <input type="text" id="adminUserInput" autocomplete="username" maxlength="16" />
-    </div>
-    <div class="settings-row">
       <div class="settings-label"><span>PASSWORD</span></div>
       <input type="password" id="adminPassInput" autocomplete="current-password" maxlength="64" />
     </div>
@@ -637,7 +718,7 @@
 </div>
 
 <div class="settings-backdrop" id="adminBackdrop">
-  <div class="settings-panel host-panel bracket">
+  <div class="settings-panel host-panel admin-panel bracket">
     <span class="bl"></span><span class="br"></span>
     <div class="settings-head">
       <h3 id="adminPanelTitle">ADMIN &mdash; CHOOSE TANK</h3>
@@ -720,35 +801,47 @@
   // ---------------------------------------------------------------
   const ARENA_W = 1190, ARENA_H = 1680;  // A3-proportioned (1 : 1.414) map
   const ZOOM = 1.3;                      // world units -> CSS px; >1 zooms in a bit
+  const FOV_MULT = 1.5;                  // Sniper & Hunter see 1.5x more of the map (width and height)
+  let curZoom = ZOOM, lastZoomT = 0, viewCssW = 620 * ZOOM, viewCssH = 875 * ZOOM;
   let VIEW_W = 620, VIEW_H = 875;        // camera viewport in world units -- recomputed to fill the screen
   const TANK_R = 18;             // collision + visual radius of the tank's hull
   const TANK_SPEED = 300;        // px/s
   const BULLET_SPEED = 680;      // px/s
   const BULLET_R = 4;
   const BULLET_LIFE = 2100;      // ms
-  const FIRE_COOLDOWN = 420;     // ms
+  const FIRE_COOLDOWN = 756;     // ms (was 420; +50% then +20% more = 756ms)
   const DAMAGE = 25;
   const MAX_HP = 100;
+  const RAM_COOLDOWN_MS = 500; // min time between ram-damage ticks against the same peer
   const RESPAWN_MS = 2000;
 
-  const DUAL_SHOT_KILLS = 1; // kills needed before both barrels fire at once
+  const FIRST_PICK_KILLS = 1; // first kill: choose Twin / Machine Gun / Sniper
   const LOADOUT7_KILLS = 7;  // kills needed to auto-unlock the triple cannon
   const GRID_SIZE = 30;                    // map grid square, world units (matches the drawn grid)
   const DRONE_RANGE = 10 * GRID_SIZE;      // drones chase anything within 10 map squares
-  const MAX_DRONES = 10;                   // per player
+  const DRONE_CTRL_REACH = 15 * GRID_SIZE; // Overlord: how far from the tank a full joystick push sends the drones
+  const MAX_DRONES = 8;                    // per player
   const DRONE_HP_RATIO = 0.5;              // a drone has half of its owner's max health
   const DRONE_SIZE = 17.6;                 // drone square side; hull square side is 32 -> 0.55 ratio
-  const DRONE_SPEED_RATIO = 0.55;          // drone speed as a fraction of the bullet speed
+  const PREDATOR_KILLS = 20;  // kills for a Hunter to become the Predator
   const LOADOUT20_KILLS = 20; // kills needed to become the Necromancer (square bullets only)
   const LOADOUT14_KILLS = 14; // kills needed to unlock the 14-kill cannon (pick triplet or quad)
 
-  const UPGRADE_POOL = [
-    { id:'firerate', label:'+15% FIRE RATE', apply(u){ u.fireRateMult *= 0.85; } },
-    { id:'bulletspeed', label:'+15% BULLET SPEED', apply(u){ u.bulletSpeedMult *= 1.15; } },
-    { id:'movespeed', label:'+12% MOVE SPEED', apply(u){ u.moveSpeedMult *= 1.12; } },
-    { id:'damage', label:'+4 DAMAGE', apply(u){ u.damageBonus += 4; } },
-    { id:'maxhp', label:'+20 MAX HP', apply(u){ u.maxHpBonus += 20; } },
+  // diep.io-style stat allocation: 8 stats, each levelled 0..STAT_MAX using
+  // points earned from kills. One point earned per kill, one point spent
+  // per level. Effect sizes below are per level.
+  const STAT_MAX = 7;
+  const STATS = [
+    { id:'regen', label:'HEALTH REGEN' },
+    { id:'maxhp', label:'MAX HEALTH' },
+    { id:'bodydmg', label:'BODY DAMAGE' },
+    { id:'bulletspeed', label:'BULLET SPEED' },
+    { id:'penetration', label:'BULLET PENETRATION' },
+    { id:'bulletdmg', label:'BULLET DAMAGE' },
+    { id:'reload', label:'RELOAD' },
+    { id:'movespeed', label:'MOVEMENT SPEED' },
   ];
+  const STAT_KEY_CODES = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8'];
 
   // Geometry of the uploaded tank sprite (measured from the source image):
   // a circular hull with a barrel extending to the right, hull center
@@ -776,6 +869,237 @@
   const SPRITE_SINGLE_CX = 84.5, SPRITE_SINGLE_CY = 81.0;
   const SPRITE_SINGLE_RADIUS = 81.5;
   const SPRITE_SINGLE_TIP_RATIO = 147.5 / 81.5; // tip distance / hull radius
+
+  // Destroyer -- admin-only tank. One oversized, tilted cannon block bolted
+  // to the hull, firing a single bullet whose radius matches the barrel's
+  // own bore -- a slow, heavy, unmissable shot rather than a stream of
+  // regular ones. Hull is drawn procedurally (a colored circle plus a
+  // rotated gray barrel block) so the drawn barrel and the bullet size
+  // always agree with each other exactly.
+  const SPRITE_DESTROYER_W = 220, SPRITE_DESTROYER_H = 220;
+  const SPRITE_DESTROYER_CX = 110, SPRITE_DESTROYER_CY = 110;
+  const SPRITE_DESTROYER_RADIUS = 38;
+  const SPRITE_DESTROYER_ROTATE_OFFSET = 0;
+  const DESTROYER_BARREL_TILT = 0.27;   // radians, the block's own rotation for the chunky/tilted look
+  const DESTROYER_BARREL_SIDE = 60;     // the block is a big rotated square
+  const DESTROYER_BARREL_NEAR = 15;     // near-edge offset used when drawing the block -- sits deep inside the hull radius (38) so it reads as bolted on, not just resting beside it
+  const DESTROYER_BARREL_TIP_DIST = DESTROYER_BARREL_NEAR + DESTROYER_BARREL_SIDE;    // true muzzle distance (the block's far edge)
+  const DESTROYER_BULLET_RADIUS = 27;   // native-space bullet radius -- matches half the barrel's side
+  // The block is drawn rotated by DESTROYER_BARREL_TILT, so its actual
+  // muzzle (the far edge, where it should fire from) sits at that same
+  // angle and DESTROYER_BARREL_TIP_DIST out from the hull center -- not
+  // straight ahead. This has to match the drawing below exactly or shots
+  // spawn from the wrong point relative to the visible barrel.
+  const BARRELS_DESTROYER = [
+    { angle: DESTROYER_BARREL_TILT, dist: DESTROYER_BARREL_TIP_DIST }
+  ];
+  function buildDestroyerSprite(){
+    const c = document.createElement('canvas');
+    c.width = SPRITE_DESTROYER_W; c.height = SPRITE_DESTROYER_H;
+    const g = c.getContext('2d');
+    // barrel block first, hull drawn on top so it caps the block's base
+    g.save();
+    g.translate(SPRITE_DESTROYER_CX, SPRITE_DESTROYER_CY);
+    g.rotate(DESTROYER_BARREL_TILT);
+    g.fillStyle = '#999999'; // low-saturation gray -- recolorSprite() leaves this alone
+    g.fillRect(DESTROYER_BARREL_NEAR, -DESTROYER_BARREL_SIDE/2, DESTROYER_BARREL_SIDE, DESTROYER_BARREL_SIDE);
+    g.strokeStyle = '#4d4d4d'; g.lineWidth = 3;
+    g.strokeRect(DESTROYER_BARREL_NEAR, -DESTROYER_BARREL_SIDE/2, DESTROYER_BARREL_SIDE, DESTROYER_BARREL_SIDE);
+    g.restore();
+    g.fillStyle = '#6ee39a'; // saturated -- recolorSprite() retunes this to each player's hue
+    g.beginPath();
+    g.arc(SPRITE_DESTROYER_CX, SPRITE_DESTROYER_CY, SPRITE_DESTROYER_RADIUS, 0, Math.PI*2);
+    g.fill();
+    g.lineWidth = 3;
+    g.strokeStyle = '#3a3a42';
+    g.stroke();
+    return c.toDataURL();
+  }
+  const SPRITE_SRC_DESTROYER = buildDestroyerSprite();
+
+  // ---- First-kill cannons (pick one at 1 kill): Twin / Machine Gun / Sniper ----
+  // Drawn in code, same recipe as the destroyer: low-saturation gray barrels
+  // (recolorSprite() leaves them alone) + a saturated hull that gets retuned
+  // to each player's color. All three share hull radius 38 and point +x.
+  const T1_R = 38, T1_CX = 45, T1_CY = 50, T1_H = 100;
+  const TWIN_TIP = 80, TWIN_OFF = 15, TWIN_W = 26;
+  const MG_BASE = 10, MG_TIP = 68, MG_BASE_W = 30, MG_TIP_W = 52;
+  const SNIPER_TIP = 100, SNIPER_W = 26;
+  const GUNNER_W = 12, GUNNER_OFFS = [-18, -6, 6, 18], GUNNER_TIPS = [64, 76, 76, 64];
+  function buildTier1Sprite(kind){
+    const W = T1_CX + (kind === 'gunner' ? 76 : kind === 'sniper' ? SNIPER_TIP : kind === 'machinegun' ? MG_TIP : TWIN_TIP) + 6;
+    const c = document.createElement('canvas');
+    c.width = W; c.height = T1_H;
+    const g = c.getContext('2d');
+    g.translate(T1_CX, T1_CY);
+    g.fillStyle = '#999999'; g.strokeStyle = '#4d4d4d'; g.lineWidth = 3; g.lineJoin = 'miter';
+    if (kind === 'twin'){
+      [-TWIN_OFF, TWIN_OFF].forEach(oy=>{
+        g.fillRect(10, oy - TWIN_W/2, TWIN_TIP - 10, TWIN_W);
+        g.strokeRect(10, oy - TWIN_W/2, TWIN_TIP - 10, TWIN_W);
+      });
+    } else if (kind === 'gunner'){
+      GUNNER_OFFS.forEach((oy, i)=>{
+        g.fillRect(10, oy - GUNNER_W/2, GUNNER_TIPS[i] - 10, GUNNER_W);
+        g.strokeRect(10, oy - GUNNER_W/2, GUNNER_TIPS[i] - 10, GUNNER_W);
+      });
+    } else if (kind === 'machinegun'){
+      g.beginPath();
+      g.moveTo(MG_BASE, -MG_BASE_W/2); g.lineTo(MG_TIP, -MG_TIP_W/2);
+      g.lineTo(MG_TIP, MG_TIP_W/2);    g.lineTo(MG_BASE, MG_BASE_W/2);
+      g.closePath(); g.fill(); g.stroke();
+    } else {
+      g.fillRect(10, -SNIPER_W/2, SNIPER_TIP - 10, SNIPER_W);
+      g.strokeRect(10, -SNIPER_W/2, SNIPER_TIP - 10, SNIPER_W);
+    }
+    g.fillStyle = '#6ee39a';
+    g.beginPath(); g.arc(0, 0, T1_R, 0, Math.PI*2); g.fill();
+    g.lineWidth = 3; g.strokeStyle = '#3a3a42'; g.stroke();
+    return c.toDataURL();
+  }
+  const SPRITE_SRC_TWIN = buildTier1Sprite('twin');
+  const SPRITE_SRC_MACHINEGUN = buildTier1Sprite('machinegun');
+  const SPRITE_SRC_SNIPER = buildTier1Sprite('sniper');
+  const SPRITE_SRC_GUNNER = buildTier1Sprite('gunner');
+  const TIER1_TANKS = ['twin','machinegun','sniper'];
+  // Hunter -- a Sniper 7-kill upgrade. A wide barrel with a narrower, longer
+  // barrel stacked on the muzzle end; fires a big and a small bullet together.
+  const HUNTER_TIP = 80, HUNTER_BODY_END = 69, HUNTER_BODY_W = 44, HUNTER_CAP_W = 32;
+  function buildHunterSprite(){
+    const c = document.createElement('canvas');
+    c.width = T1_CX + HUNTER_TIP + 6; c.height = T1_H;
+    const g = c.getContext('2d');
+    g.translate(T1_CX, T1_CY);
+    g.fillStyle = '#999999'; g.strokeStyle = '#4d4d4d'; g.lineWidth = 3; g.lineJoin = 'miter';
+    g.fillRect(HUNTER_BODY_END - 12, -HUNTER_CAP_W/2, HUNTER_TIP - HUNTER_BODY_END + 12, HUNTER_CAP_W);
+    g.strokeRect(HUNTER_BODY_END - 12, -HUNTER_CAP_W/2, HUNTER_TIP - HUNTER_BODY_END + 12, HUNTER_CAP_W);
+    g.fillRect(10, -HUNTER_BODY_W/2, HUNTER_BODY_END - 10, HUNTER_BODY_W);
+    g.strokeRect(10, -HUNTER_BODY_W/2, HUNTER_BODY_END - 10, HUNTER_BODY_W);
+    g.fillStyle = '#6ee39a';
+    g.beginPath(); g.arc(0, 0, T1_R, 0, Math.PI*2); g.fill();
+    g.lineWidth = 3; g.strokeStyle = '#3a3a42'; g.stroke();
+    return c.toDataURL();
+  }
+  const SPRITE_SRC_HUNTER = buildHunterSprite();
+  // Predator -- the 20-kill upgrade for players who chose Hunter at 7 kills.
+  // A long dark barrel with a light base block and four stacked light slots;
+  // fires a 10-bullet burst and turns invisible while standing still.
+  const PRED_TIP = 82, PRED_W = 34, PRED_BASE_END = 47, PRED_BASE_W = 29, PRED_SLOT_W = 26.5, PRED_SLOT_T = 4.5, PRED_SLOTS = [56.7, 63.8, 70.5, 76.4];
+  function buildPredatorSprite(){
+    const c = document.createElement('canvas');
+    c.width = T1_CX + PRED_TIP + 6; c.height = T1_H;
+    const g = c.getContext('2d');
+    g.translate(T1_CX, T1_CY);
+    g.fillStyle = '#777777';
+    g.beginPath(); g.roundRect(10, -PRED_W/2, PRED_TIP - 10, PRED_W, 2); g.fill();
+    g.fillStyle = '#999999';
+    g.fillRect(10, -PRED_BASE_W/2, PRED_BASE_END - 10, PRED_BASE_W);
+    PRED_SLOTS.forEach(cx=>{ g.fillRect(cx - PRED_SLOT_T/2, -PRED_SLOT_W/2, PRED_SLOT_T, PRED_SLOT_W); });
+    g.fillStyle = '#6ee39a';
+    g.beginPath(); g.arc(0, 0, T1_R, 0, Math.PI*2); g.fill();
+    g.lineWidth = 3; g.strokeStyle = '#3a3a42'; g.stroke();
+    return c.toDataURL();
+  }
+  const SPRITE_SRC_PREDATOR = buildPredatorSprite();
+  // Quintet art -- five bullet barrels around the hull (angles measured from the design image).
+  const QUIN_C = 75, QUIN_TIP = 61, QUIN_W = 33;
+  const QUIN_ANGLES = [-132, -44, 34, 105, 166].map(d=>d * Math.PI / 180);
+  function buildQuintetSprite(){
+    const c = document.createElement('canvas');
+    c.width = QUIN_C*2; c.height = QUIN_C*2;
+    const g = c.getContext('2d');
+    g.translate(QUIN_C, QUIN_C);
+    g.fillStyle = '#999999'; g.strokeStyle = '#4d4d4d'; g.lineWidth = 3; g.lineJoin = 'miter';
+    QUIN_ANGLES.forEach(a=>{
+      g.save(); g.rotate(a);
+      g.fillRect(10, -QUIN_W/2, QUIN_TIP - 10, QUIN_W);
+      g.strokeRect(10, -QUIN_W/2, QUIN_TIP - 10, QUIN_W);
+      g.restore();
+    });
+    g.fillStyle = '#6ee39a';
+    g.beginPath(); g.arc(0, 0, T1_R, 0, Math.PI*2); g.fill();
+    g.lineWidth = 3; g.strokeStyle = '#3a3a42'; g.stroke();
+    return c.toDataURL();
+  }
+  const SPRITE_SRC_QUINTET = buildQuintetSprite();
+  // Overlord -- the 20-kill upgrade for players who chose Overseer at 7 kills.
+  // Four wide drone launchers on the diagonals (an X). The hull turns to face the
+  // move stick; all 10 drones are steered by the aim/fire joystick (see updateDrones).
+  const OVLD_C = 75, OVLD_TIP = 51, OVLD_W = 54;
+  const OVLD_ANGLES = [-135, -45, 45, 135].map(d=>d * Math.PI / 180);
+  function buildOverlordSprite(){
+    const c = document.createElement('canvas');
+    c.width = OVLD_C*2; c.height = OVLD_C*2;
+    const g = c.getContext('2d');
+    g.translate(OVLD_C, OVLD_C);
+    g.fillStyle = '#999999'; g.strokeStyle = '#4d4d4d'; g.lineWidth = 3; g.lineJoin = 'miter';
+    OVLD_ANGLES.forEach(a=>{
+      g.save(); g.rotate(a);
+      g.fillRect(10, -OVLD_W/2, OVLD_TIP - 10, OVLD_W);
+      g.strokeRect(10, -OVLD_W/2, OVLD_TIP - 10, OVLD_W);
+      g.restore();
+    });
+    g.fillStyle = '#6ee39a';
+    g.beginPath(); g.arc(0, 0, T1_R, 0, Math.PI*2); g.fill();
+    g.lineWidth = 3; g.strokeStyle = '#3a3a42'; g.stroke();
+    return c.toDataURL();
+  }
+  const SPRITE_SRC_OVERLORD = buildOverlordSprite();
+  // Quad Twin -- a 20-kill upgrade on the Twin route (Triple / Quad -> Triplet or
+  // Quad Twin). Four twin pairs (front, back, left, right); fires bullets out
+  // of all eight barrels, each pair shooting in its own direction.
+  const QT_C = 82, QT_TIP = 74, QT_BW = 34, QT_OFF = QT_BW/2 + 0.5;
+  const QT_ANGLES = [0, Math.PI/2, Math.PI, Math.PI*1.5];
+  const QT_BARRELS = [];
+  QT_ANGLES.forEach(A=>{ [-1, 1].forEach(sd=>{
+    const off = sd * QT_OFF;
+    QT_BARRELS.push({ angle: A + Math.atan2(off, QT_TIP), dist: Math.hypot(QT_TIP, off), aim: A });
+  }); });
+  function buildQuadTwinSprite(){
+    const c = document.createElement('canvas');
+    c.width = QT_C*2; c.height = QT_C*2;
+    const g = c.getContext('2d');
+    g.translate(QT_C, QT_C);
+    g.fillStyle = '#999999'; g.strokeStyle = '#4d4d4d'; g.lineWidth = 3; g.lineJoin = 'miter';
+    QT_ANGLES.forEach(A=>{
+      g.save(); g.rotate(A);
+      [-1, 1].forEach(sd=>{
+        g.fillRect(10, sd*QT_OFF - QT_BW/2, QT_TIP - 10, QT_BW);
+        g.strokeRect(10, sd*QT_OFF - QT_BW/2, QT_TIP - 10, QT_BW);
+      });
+      g.restore();
+    });
+    g.fillStyle = '#6ee39a';
+    g.beginPath(); g.arc(0, 0, T1_R, 0, Math.PI*2); g.fill();
+    g.lineWidth = 3; g.strokeStyle = '#3a3a42'; g.stroke();
+    return c.toDataURL();
+  }
+  const SPRITE_SRC_QUADTWIN = buildQuadTwinSprite();
+  // Overseer -- the other Sniper 7-kill upgrade. Two trapezoid drone
+  // launchers on the sides (wider at the muzzle); launches drones (see fireDrone).
+  const OVSR_C = 70, OVSR_TIP = 64, OVSR_BASE_W = 26, OVSR_TIP_W = 42;
+  function buildOverseerSprite(){
+    const c = document.createElement('canvas');
+    c.width = OVSR_C*2; c.height = OVSR_C*2;
+    const g = c.getContext('2d');
+    g.translate(OVSR_C, OVSR_C);
+    g.fillStyle = '#999999'; g.strokeStyle = '#4d4d4d'; g.lineWidth = 3; g.lineJoin = 'miter';
+    [Math.PI/2, -Math.PI/2].forEach(a=>{
+      g.save(); g.rotate(a);
+      g.beginPath();
+      g.moveTo(10, -OVSR_BASE_W/2); g.lineTo(OVSR_TIP, -OVSR_TIP_W/2);
+      g.lineTo(OVSR_TIP, OVSR_TIP_W/2); g.lineTo(10, OVSR_BASE_W/2);
+      g.closePath(); g.fill(); g.stroke();
+      g.restore();
+    });
+    g.fillStyle = '#6ee39a';
+    g.beginPath(); g.arc(0, 0, T1_R, 0, Math.PI*2); g.fill();
+    g.lineWidth = 3; g.strokeStyle = '#3a3a42'; g.stroke();
+    return c.toDataURL();
+  }
+  const SPRITE_SRC_OVERSEER = buildOverseerSprite();
+  const GUNNER_BARRELS = GUNNER_OFFS.map((oy, i)=>({ angle: Math.atan2(oy, GUNNER_TIPS[i]), dist: Math.hypot(GUNNER_TIPS[i], oy) }));
+  const TWIN_BARRELS = [-TWIN_OFF, TWIN_OFF].map(oy=>({ angle: Math.atan2(oy, TWIN_TIP), dist: Math.hypot(TWIN_TIP, oy) }));
   const SPRITE_SRC_SINGLE = "data:image/png;base64,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";
 
   // Triple-cannon variant, unlocked as a 7-kill choice. Three angled
@@ -861,7 +1185,7 @@
     { angle: 0, dist: 52 },
     { angle: 3.1415926536, dist: 52 },
   ];
-  const SPRITE_SRC_NECRO = "data:image/png;base64,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";
+  const SPRITE_SRC_NECRO = "data:image/png;base64,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";
 
   // Octo -- the other 20-kill choice. Eight barrels every 45 degrees, each
   // firing along its own angle.
@@ -883,7 +1207,7 @@
 
   const LOADOUTS = {
     single:   { srcKey:'single',   w:SPRITE_SINGLE_W,   h:SPRITE_SINGLE_H,   cx:SPRITE_SINGLE_CX,   cy:SPRITE_SINGLE_CY,   radius:SPRITE_SINGLE_RADIUS,   rotOffset:0,                          barrels:[{ angle:0, dist: SPRITE_SINGLE_TIP_RATIO * SPRITE_SINGLE_RADIUS }] },
-    dual:     { srcKey:'dual',     w:SPRITE_W,          h:SPRITE_H,          cx:SPRITE_CX,          cy:SPRITE_CY,          radius:SPRITE_RADIUS,          rotOffset:SPRITE_ROTATE_OFFSET,       barrels:BARRELS },
+    dual:     { srcKey:'dual',     w:T1_CX+TWIN_TIP+6,    h:T1_H, cx:T1_CX, cy:T1_CY, radius:T1_R, rotOffset:0, barrels:TWIN_BARRELS },  // swapped: the parallel-barrel twin is now the admin-only "OLD TWIN"
     triple:   { srcKey:'triple',   w:SPRITE_TRIPLE_W,   h:SPRITE_TRIPLE_H,   cx:SPRITE_TRIPLE_CX,   cy:SPRITE_TRIPLE_CY,   radius:SPRITE_TRIPLE_RADIUS,   rotOffset:SPRITE_TRIPLE_ROTATE_OFFSET, barrels:BARRELS_TRIPLE },
     parallel: { srcKey:'parallel', w:SPRITE_PARALLEL_W, h:SPRITE_PARALLEL_H, cx:SPRITE_PARALLEL_CX, cy:SPRITE_PARALLEL_CY, radius:SPRITE_PARALLEL_RADIUS, rotOffset:SPRITE_PARALLEL_ROTATE_OFFSET, barrels:BARRELS_PARALLEL },
     triplet:  { srcKey:'triplet',  w:SPRITE_TRIPLET_W,  h:SPRITE_TRIPLET_H,  cx:SPRITE_TRIPLET_CX,  cy:SPRITE_TRIPLET_CY,  radius:SPRITE_TRIPLET_RADIUS,  rotOffset:SPRITE_TRIPLET_ROTATE_OFFSET, barrels:BARRELS_TRIPLET },
@@ -891,10 +1215,21 @@
     octo:     { srcKey:'octo',     w:SPRITE_OCTO_W,     h:SPRITE_OCTO_H,     cx:SPRITE_OCTO_CX,     cy:SPRITE_OCTO_CY,     radius:SPRITE_OCTO_RADIUS,     rotOffset:SPRITE_OCTO_ROTATE_OFFSET,   barrels:BARRELS_OCTO },
     necro:    { srcKey:'necro',    w:SPRITE_NECRO_W,    h:SPRITE_NECRO_H,    cx:SPRITE_NECRO_CX,    cy:SPRITE_NECRO_CY,    radius:SPRITE_NECRO_RADIUS,    rotOffset:SPRITE_NECRO_ROTATE_OFFSET,  barrels:BARRELS_NECRO },
     omni:     { srcKey:'omni',     w:SPRITE_OMNI_W,     h:SPRITE_OMNI_H,     cx:SPRITE_OMNI_CX,     cy:SPRITE_OMNI_CY,     radius:SPRITE_OMNI_RADIUS,     rotOffset:SPRITE_OMNI_ROTATE_OFFSET,   barrels:BARRELS_OMNI },
+    gunner:    { srcKey:'gunner',    w:T1_CX+76+6,          h:T1_H, cx:T1_CX, cy:T1_CY, radius:T1_R, rotOffset:0, barrels:GUNNER_BARRELS, fireMul:0.8, dmgMul:0.4, spread:0.06, bulletRadius:7 },
+    twin:      { srcKey:'twin',      w:SPRITE_W,          h:SPRITE_H,          cx:SPRITE_CX,          cy:SPRITE_CY,          radius:SPRITE_RADIUS,          rotOffset:SPRITE_ROTATE_OFFSET,       barrels:BARRELS },  // swapped: the angled two-barrel design is now the real Twin
+    machinegun:{ srcKey:'machinegun',w:T1_CX+MG_TIP+6,      h:T1_H, cx:T1_CX, cy:T1_CY, radius:T1_R, rotOffset:0, barrels:[{ angle:0, dist:MG_TIP }],     fireMul:0.4, dmgMul:0.6, speedMul:0.95, spread:0.1 },
+    sniper:    { srcKey:'sniper',    w:T1_CX+SNIPER_TIP+6,  h:T1_H, cx:T1_CX, cy:T1_CY, radius:T1_R, rotOffset:0, barrels:[{ angle:0, dist:SNIPER_TIP }], fireMul:1.5, dmgMul:1.6, speedMul:1.7 },
+    hunter:    { srcKey:'hunter',    w:T1_CX+HUNTER_TIP+6, h:T1_H, cx:T1_CX, cy:T1_CY, radius:T1_R, rotOffset:0, barrels:[{ angle:0, dist:HUNTER_TIP }], fireMul:3, dmgMul:0.6, speedMul:1.4, bulletRadius:HUNTER_BODY_W/2, burst:{ count:5, gap:70, min:0.3 } },  // 5-shot burst, bullets grow from 30% to the big (hull-side) barrel's size
+    predator:  { srcKey:'predator',  w:T1_CX+PRED_TIP+6, h:T1_H, cx:T1_CX, cy:T1_CY, radius:T1_R, rotOffset:0, barrels:[{ angle:0, dist:PRED_TIP }], fireMul:4, dmgMul:0.5, speedMul:1.5, bulletRadius:PRED_W/2, burst:{ count:10, gap:50, min:0.3 } },
+    quadtwin:  { srcKey:'quadtwin',  w:QT_C*2, h:QT_C*2, cx:QT_C, cy:QT_C, radius:T1_R, rotOffset:0, barrels:QT_BARRELS, fireMul:2.4, dmgMul:0.55 },  // 8 bullets, four twin pairs
+    quintet:   { srcKey:'quintet',   w:QUIN_C*2, h:QUIN_C*2, cx:QUIN_C, cy:QUIN_C, radius:T1_R, rotOffset:0, barrels:QUIN_ANGLES.map(a=>({ angle:a, dist:QUIN_TIP })), fireMul:1.8, dmgMul:0.7 },  // 5 bullets, one out of each barrel
+    overlord:  { srcKey:'overlord',  w:OVLD_C*2, h:OVLD_C*2, cx:OVLD_C, cy:OVLD_C, radius:T1_R, rotOffset:0, barrels:OVLD_ANGLES.map(a=>({ angle:a, dist:OVLD_TIP })), maxDrones:10, fireMul:0.4 },
+    overseer:  { srcKey:'overseer',  w:OVSR_C*2, h:OVSR_C*2, cx:OVSR_C, cy:OVSR_C, radius:T1_R, rotOffset:0, barrels:[{ angle:Math.PI/2, dist:OVSR_TIP }, { angle:-Math.PI/2, dist:OVSR_TIP }] },
+    destroyer: { srcKey:'destroyer', w:SPRITE_DESTROYER_W, h:SPRITE_DESTROYER_H, cx:SPRITE_DESTROYER_CX, cy:SPRITE_DESTROYER_CY, radius:SPRITE_DESTROYER_RADIUS, rotOffset:SPRITE_DESTROYER_ROTATE_OFFSET, barrels:BARRELS_DESTROYER, bulletRadius:DESTROYER_BULLET_RADIUS, fireMul:2.2, dmgMul:2.5 },
   };
   const LOADOUT_SOURCES = {
     single: SPRITE_SRC_SINGLE,
-    dual: SPRITE_SRC,
+    dual: SPRITE_SRC_TWIN,
     triple: SPRITE_SRC_TRIPLE,
     parallel: SPRITE_SRC_PARALLEL,
     omni: SPRITE_SRC_OMNI,
@@ -902,15 +1237,31 @@
     quad: SPRITE_SRC_QUAD,
     necro: SPRITE_SRC_NECRO,
     octo: SPRITE_SRC_OCTO,
+    destroyer: SPRITE_SRC_DESTROYER,
+    twin: SPRITE_SRC,
+    machinegun: SPRITE_SRC_MACHINEGUN,
+    sniper: SPRITE_SRC_SNIPER,
+    gunner: SPRITE_SRC_GUNNER,
+    hunter: SPRITE_SRC_HUNTER,
+    predator: SPRITE_SRC_PREDATOR,
+    overlord: SPRITE_SRC_OVERLORD,
+    quintet: SPRITE_SRC_QUINTET,
+    quadtwin: SPRITE_SRC_QUADTWIN,
+    overseer: SPRITE_SRC_OVERSEER,
   };
   // Which loadout a player is using right now, given their kill count and
   // (once past LOADOUT7_KILLS / LOADOUT14_KILLS) their chosen picks.
-  function resolveLoadout(score, loadout7, loadout14, loadout20, forced){
+  const isDroneTank = (id)=> id === 'necro' || id === 'overseer' || id === 'overlord';
+  function resolveLoadout(score, loadout7, loadout14, loadout20, forced, loadout1){
     if (forced && LOADOUTS[forced]) return forced;   // /admin tank override
-    if (score >= LOADOUT20_KILLS) return loadout20 === 'octo' ? 'octo' : 'necro';
-    if (score >= LOADOUT14_KILLS) return loadout14 === 'quad' ? 'quad' : 'triplet';
-    if (score >= LOADOUT7_KILLS) return (loadout7 === 'triple' || loadout7 === 'parallel') ? loadout7 : 'dual';
-    if (score >= DUAL_SHOT_KILLS) return 'dual';
+    // 14- and 20-kill tiers removed for now (Triplet/Quad/Necromancer/Octo are admin-only),
+    // except Hunter -> Predator at 20 kills (automatic, no choice).
+    if (score >= PREDATOR_KILLS && loadout7 === 'hunter') return loadout20 === 'quintet' ? 'quintet' : 'predator';  // 20-kill choice; Predator if you miss the popup
+    if (score >= PREDATOR_KILLS && loadout7 === 'parallel') return loadout20 === 'octo' ? 'octo' : 'quintet';       // Twin route, Diagonal: Quintet or Octo
+    if (score >= PREDATOR_KILLS && (loadout7 === 'triple' || loadout7 === 'quad')) return loadout20 === 'quadtwin' ? 'quadtwin' : 'triplet';  // Twin route, Triple/Quad: Triplet or Quad Twin
+    if (score >= PREDATOR_KILLS && loadout7 === 'overseer') return 'overlord';   // Sniper route, 20 kills: Hunter -> Predator, Overseer -> Overlord
+    if (score >= LOADOUT7_KILLS && (loadout7 === 'triple' || loadout7 === 'parallel' || loadout7 === 'quad' || loadout7 === 'gunner' || loadout7 === 'destroyer' || loadout7 === 'overseer' || loadout7 === 'hunter')) return loadout7;
+    if (score >= FIRST_PICK_KILLS) return TIER1_TANKS.indexOf(loadout1) >= 0 ? loadout1 : 'twin';  // undecided = twin
     return 'single';
   }
 
@@ -1019,7 +1370,7 @@
   // ---------------------------------------------------------------
   const SETTINGS_KEY = 'tankArenaSettings';
   function loadSettings(){
-    const defaults = { moveMult: 1, bulletMult: 1, sensMult: 1, theme: 'dark' };
+    const defaults = { moveMult: 1, bulletMult: 1, sensMult: 1, theme: 'light' };   // light (white) mode is the default
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
       if (!raw) return defaults;
@@ -1028,7 +1379,9 @@
         moveMult: clampSetting(parsed.moveMult, 0.5, 2, 1),
         bulletMult: clampSetting(parsed.bulletMult, 0.5, 2, 1),
         sensMult: clampSetting(parsed.sensMult, 0.5, 2, 1),
-        theme: parsed.theme === 'light' ? 'light' : 'dark',
+        // only keep a saved DARK theme if the player picked it themselves; everyone else gets light
+        theme: (parsed.themeChosen && parsed.theme !== 'light') ? 'dark' : 'light',
+        themeChosen: !!parsed.themeChosen,
       };
     } catch(e){ return defaults; }
   }
@@ -1041,7 +1394,7 @@
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); } catch(e){}
   }
   function applyTheme(){
-    document.documentElement.setAttribute('data-theme', state.settings.theme === 'light' ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', state.settings.theme === 'dark' ? 'dark' : 'light');
   }
 
   const state = {
@@ -1060,6 +1413,9 @@
     joinedAt: 0,
     // game runtime
     x:0, y:0, turretAngle:0, hp:MAX_HP, alive:false, score:0,
+    moveAngle:0,             // last non-zero movement heading -- drones trail behind this
+    streak:0,               // consecutive kills without dying; resets to 0 on death
+    loadout1: null,          // null | 'twin' | 'machinegun' | 'sniper' -- chosen at the first kill (null = twin)
     loadout7: null,          // null | 'triple' | 'parallel' -- chosen at 7 kills
     loadout20: null,         // null | 'necro' | 'octo' -- chosen at 20 kills (null = necromancer)
     loadout14: null,         // null | 'triplet' | 'quad' -- chosen at 14 kills (null = triplet)
@@ -1068,7 +1424,7 @@
     account: null, accountToken: null,   // { username, kills } | null -- signed-in account (cross-room kill total)
     leaderboard: [],         // [{username, kills}] -- public, server-pushed
     upgrades: freshUpgrades(),  // stacks of bonuses earned from kills, reset per sector join
-    spritesByLoadout: { single:{}, dual:{}, triple:{}, parallel:{}, omni:{}, triplet:{}, quad:{}, necro:{}, octo:{} }, // loadoutId -> colorId -> recolored <canvas>
+    spritesByLoadout: { single:{}, dual:{}, twin:{}, machinegun:{}, sniper:{}, gunner:{}, hunter:{}, predator:{}, quintet:{}, quadtwin:{}, overlord:{}, overseer:{}, triple:{}, parallel:{}, omni:{}, triplet:{}, quad:{}, necro:{}, octo:{}, destroyer:{} }, // loadoutId -> colorId -> recolored <canvas>
     remoteSmooth: {},      // peerId -> {x,y,turretAngle} smoothed render position (server ticks slower than 60fps)
     spritesReady: false,
     lastShot:0,
@@ -1076,6 +1432,7 @@
     droneSeq: 0, droneSide: 0, dronesSent: false,
     remoteDrones: {},     // "peer:droneId" -> {x,y} smoothed render position
     consumedDrones: {},   // "peer:droneId" -> expiry ms (already hit me, waiting for owner to remove)
+    ramCooldowns: {},     // peerId -> last-hit timestamp (ms), throttles tank-vs-tank collision damage
     unsubDrone: null,
     bullets: [],          // {id, shooterId, shooterName, x,y,vx,vy,color,born}
     sparks: [],            // {x,y,born,color}
@@ -1085,7 +1442,8 @@
     chatUnread: 0,
     keys: {},
     moveVec: {x:0, y:0, mag:0},
-    aimVec: {x:0, y:0, mag:0},
+    stealthHidden: false, selfAlpha: 1, stealthFade: {},
+    aimVec: {x:0, y:0, mag:0}, aimTouched: false,
     zoneEnteredAt: null,   // performance.now() timestamp we last continuously entered a hazard zone (fortress bunker)
     unsubShoot: null,
     unsubKill: null,
@@ -1096,24 +1454,75 @@
   applyTheme();
 
   function freshUpgrades(){
-    return { fireRateMult:1, bulletSpeedMult:1, moveSpeedMult:1, damageBonus:0, maxHpBonus:0, count:0 };
+    return {
+      points: 0,
+      lvl: { regen:0, maxhp:0, bodydmg:0, bulletspeed:0, penetration:0, bulletdmg:0, reload:0, movespeed:0 },
+    };
   }
-  function effectiveMaxHp(){ return MAX_HP + state.upgrades.maxHpBonus; }
-  function effectiveMoveSpeed(){ return TANK_SPEED * state.settings.moveMult * state.upgrades.moveSpeedMult; }
-  function effectiveBulletSpeed(){ return BULLET_SPEED * state.settings.bulletMult * state.upgrades.bulletSpeedMult; }
-  function effectiveFireCooldown(){ return FIRE_COOLDOWN * state.upgrades.fireRateMult; }
-  function effectiveDamage(){ return DAMAGE + state.upgrades.damageBonus; }
-  function grantRandomUpgrade(){
-    const pick = UPGRADE_POOL[Math.floor(Math.random()*UPGRADE_POOL.length)];
-    pick.apply(state.upgrades);
-    state.upgrades.count += 1;
-    if (pick.id === 'maxhp'){
-      // heal by the same amount the max went up by
-      state.hp = Math.min(effectiveMaxHp(), state.hp + 20);
+  function effectiveMaxHp(){ return MAX_HP + state.upgrades.lvl.maxhp * 15; }
+  function effectiveMoveSpeed(){ return TANK_SPEED * state.settings.moveMult * (1 + state.upgrades.lvl.movespeed * 0.07); }
+  function effectiveBulletSpeed(){ return BULLET_SPEED * state.settings.bulletMult * (1 + state.upgrades.lvl.bulletspeed * 0.09); }
+  function effectiveFireCooldown(){ return FIRE_COOLDOWN * Math.pow(0.93, state.upgrades.lvl.reload); }
+  function effectiveDamage(){ return DAMAGE + state.upgrades.lvl.bulletdmg * 3; }
+  function effectiveBodyDamageBonus(){ return state.upgrades.lvl.bodydmg * 4; }
+  function effectiveRegenPerSec(){ return state.upgrades.lvl.regen * 1.1; }
+  function effectivePierce(){ return state.upgrades.lvl.penetration; }
+
+  // Award stat points on kill (replaces the old random-upgrade-on-kill).
+  function grantStatPoint(n){
+    n = n || 1;
+    state.upgrades.points += n;
+    showToast('+' + n + ' UPGRADE POINT' + (n > 1 ? 'S' : ''));
+    renderStatsPanel();
+  }
+
+  // Spend one point to raise a single stat by one level -- called when the
+  // player taps a row's + button, or presses its [1]-[8] key.
+  function allocateStat(id){
+    const lvl = state.upgrades.lvl;
+    if (!(id in lvl)) return;
+    if (lvl[id] >= STAT_MAX){ showToast('Already maxed'); return; }
+    if (state.adminUnlocked){
+      // admins spend no points -- one tap sends this stat straight to max
+      lvl[id] = STAT_MAX;
+      showToast('ADMIN: ' + id.toUpperCase() + ' MAXED (FREE)');
+    } else {
+      if (state.upgrades.points <= 0){ showToast('No upgrade points left'); return; }
+      lvl[id] += 1;
+      state.upgrades.points -= 1;
     }
-    showToast('UPGRADE: ' + pick.label);
-    byId('hudSelfHealth').textContent = 'HP ' + state.hp + ' / ' + effectiveMaxHp();
-    if (state.room) state.room.presence({ hp: state.hp, maxHp: effectiveMaxHp() });
+    if (id === 'maxhp' && state.alive){
+      state.hp = Math.min(effectiveMaxHp(), state.hp + 15);
+      if (state.room) state.room.presence({ hp: state.hp, maxHp: effectiveMaxHp() });
+    }
+    byId('hudSelfHealth').textContent = 'HP ' + Math.round(state.hp) + ' / ' + effectiveMaxHp();
+    renderStatsPanel();
+  }
+
+  function renderStatsPanel(){
+    const u = state.upgrades;
+    const pts = u.points;
+    const free = !!state.adminUnlocked; // admins can always open the panel and spend nothing
+    byId('statsPointsTag').textContent = '\u00d7' + pts;
+    byId('statsPointsTag').classList.toggle('hide', pts <= 0);
+    const panelEl = byId('statsPanel');
+    panelEl.classList.toggle('show', pts > 0 || free);
+    STATS.forEach(s=>{
+      const row = panelEl.querySelector('[data-stat="' + s.id + '"]');
+      if (!row) return;
+      const level = u.lvl[s.id];
+      row.querySelector('[data-fill]').style.width = Math.round((level / STAT_MAX) * 100) + '%';
+      row.classList.toggle('disabled', pts <= 0 && !free);
+      row.classList.toggle('maxed', level >= STAT_MAX);
+    });
+  }
+
+  function setupStatsPanel(){
+    byId('statsPanel').addEventListener('click', (e)=>{
+      const row = e.target.closest('.stat-row');
+      if (!row) return;
+      allocateStat(row.dataset.stat);
+    });
   }
 
   // ---------------------------------------------------------------
@@ -1199,7 +1608,7 @@
     });
   }
 
-  const LOADOUT_TITLES = { triple:'TRIPLE CANNON', parallel:'DIAGONAL CANNON', triplet:'TRIPLET', quad:'QUAD', necro:'NECROMANCER', octo:'OCTO' };
+  const LOADOUT_TITLES = { twin:'TWIN', machinegun:'MACHINE GUN', sniper:'SNIPER', gunner:'GUNNER', hunter:'HUNTER', predator:'PREDATOR', quintet:'QUINTET', quadtwin:'QUAD TWIN', overlord:'OVERLORD', overseer:'OVERSEER', triple:'TRIPLE CANNON', parallel:'DIAGONAL CANNON', triplet:'TRIPLET', quad:'QUAD', necro:'NECROMANCER', octo:'OCTO', destroyer:'DESTROYER' };
   let choiceOptions = ['triple','parallel'];
   let choiceTier = 7;
   function buildLoadoutTiles(){
@@ -1217,6 +1626,12 @@
       const img = document.createElement('img');
       img.src = sprite.toDataURL();
       tile.appendChild(img);
+      if (choiceTier === 1 || choiceTier === 7){   // 3-way menus get a caption -- the three sprites are easy to mix up on a phone
+        tile.classList.add('captioned');
+        const cap = document.createElement('span');
+        cap.textContent = (LOADOUT_TITLES[loadoutId] || loadoutId).replace(' CANNON','');
+        tile.appendChild(cap);
+      }
       tile.addEventListener('click', ()=> pickLoadout(loadoutId));
       grid.appendChild(tile);
     });
@@ -1226,14 +1641,17 @@
   function offerLoadoutChoice(tier){
     if (!state.spritesReady) return;
     choiceTier = tier;
-    choiceOptions = tier === 20 ? ['necro','octo'] : (tier === 14 ? ['triplet','quad'] : ['triple','parallel']);
+    choiceOptions = tier === 20 ? (state.loadout7 === 'parallel' ? ['quintet','octo'] : (state.loadout7 === 'hunter' ? ['predator','quintet'] : ['triplet','quadtwin'])) : (tier === 14 ? ['triplet','quad'] : (tier === 1 ? TIER1_TANKS : (state.loadout1 === 'machinegun' ? ['gunner','destroyer'] : state.loadout1 === 'sniper' ? ['overseer','hunter'] : ['triple','quad','parallel'])));
     buildLoadoutTiles(); // rebuild so previews reflect the player's current color
     byId('loadoutChoice').classList.add('show');
     clearTimeout(loadoutChoiceTimer);
-    loadoutChoiceTimer = setTimeout(()=>{ byId('loadoutChoice').classList.remove('show'); }, 6500);
+    loadoutChoiceTimer = setTimeout(()=>{ byId('loadoutChoice').classList.remove('show'); }, tier === 1 ? 10000 : 6500);
   }
   function pickLoadout(loadoutId){
-    if (choiceTier === 20){
+    if (choiceTier === 1){
+      state.loadout1 = loadoutId;
+      if (state.room) state.room.presence({ loadout1: loadoutId });
+    } else if (choiceTier === 20){
       state.loadout20 = loadoutId;
       if (state.room) state.room.presence({ loadout20: loadoutId });
     } else if (choiceTier === 14){
@@ -1343,7 +1761,7 @@
           peersList = (msg.list||[]).map(p=>({ peer: p.peer, isMe: p.peer === myPeer, presence: p.presence||{} }));
           firePeers();
         } else if (msg.type === 'match' || msg.type === 'matchEnd' || msg.type === 'adminResult' || msg.type === 'adminKill' || msg.type === 'adminBanList' || msg.type === 'adminUnbanResult' ||
-                   msg.type === 'authResult' || msg.type === 'leaderboard' || msg.type === 'accountKills' || msg.type === 'accountDeleted' || msg.type === 'adminDeleteResult'){
+                   msg.type === 'authResult' || msg.type === 'leaderboard' || msg.type === 'accountKills' || msg.type === 'accountDeleted' || msg.type === 'adminDeleteResult' || msg.type === 'adminBanResult'){
           serverListeners.forEach(cb=>{ try{ cb(msg); }catch(e){} });
         } else if (msg.type === 'banned'){
           banned = true;
@@ -1470,7 +1888,7 @@
   }
 
   async function enterLobby(){
-    state.name = (state.account && state.account.username) ? state.account.username.slice(0,16) : 'OPERATOR';
+    state.name = (state.account && state.account.username) ? state.account.username.slice(0,16) : 'GUEST';
     switchScreen('screen-lobby');
     if (state.room){
       await state.room.presence({ name: state.name, color: state.color.id, roomId: null, alive: false, hp: 0, score: 0 });
@@ -1589,15 +2007,17 @@
     const spawn = SPAWNS[Math.floor(Math.random()*SPAWNS.length)];
     state.x = spawn.x; state.y = spawn.y; state.turretAngle = 0;
     state.upgrades = freshUpgrades();
-    state.loadout7 = null; state.loadout14 = null; state.loadout20 = null; state.adminTank = null; state.drones = []; state.dronesSent = false; state.consumedDrones = {}; state.remoteDrones = {};
-    state.hp = effectiveMaxHp(); state.alive = true; state.score = 0;
+    renderStatsPanel();
+    byId('statsPanel').classList.remove('show');
+    state.loadout1 = null; state.loadout7 = null; state.loadout14 = null; state.loadout20 = null; state.adminTank = null; state.drones = []; state.dronesSent = false; state.consumedDrones = {}; state.remoteDrones = {};
+    state.hp = effectiveMaxHp(); state.alive = true; state.score = 0; state.streak = 0;
     state.joinedAt = Date.now();
 
     await state.room.presence({
       roomId: sector, roomMeta: meta, name: state.name, color: color.id, team, carrying: null, captures: 0,
-      loadout7: null, loadout14: null, loadout20: null, adminTank: null, drones: [],
+      loadout1: null, loadout7: null, loadout14: null, loadout20: null, adminTank: null, drones: [],
       x: state.x, y: state.y, turretAngle: state.turretAngle,
-      hp: state.hp, maxHp: effectiveMaxHp(), alive: true, score: 0, joinedAt: state.joinedAt
+      hp: state.hp, maxHp: effectiveMaxHp(), alive: true, score: 0, streak: 0, joinedAt: state.joinedAt
     });
 
     // capacity + color-collision double-check after presence propagates
@@ -1640,11 +2060,17 @@
     const rect = canvas.getBoundingClientRect();
     const cssW = Math.max(1, rect.width);
     const cssH = Math.max(1, rect.height);
-    VIEW_W = cssW / ZOOM;
-    VIEW_H = cssH / ZOOM;
+    viewCssW = cssW; viewCssH = cssH;
     canvas.width = Math.round(cssW * dpr);
     canvas.height = Math.round(cssH * dpr);
-    ctx.setTransform(dpr * ZOOM, 0, 0, dpr * ZOOM, 0, 0);
+    applyZoom(curZoom);
+  }
+  // zoom < ZOOM shows more of the world; VIEW_W/H are the visible world size
+  function applyZoom(z){
+    curZoom = z;
+    VIEW_W = viewCssW / z;
+    VIEW_H = viewCssH / z;
+    ctx.setTransform(dpr * z, 0, 0, dpr * z, 0, 0);
   }
   window.addEventListener('resize', fitCanvas);
 
@@ -1672,6 +2098,8 @@
     closeWaitPanel();
     subscribeGameEvents(state.currentSector);
     setupInput();
+    setupStatsPanel();
+    renderStatsPanel();
     state.lastFrame = performance.now();
     requestAnimationFrame(loop);
     renderScoreStrip();
@@ -1764,7 +2192,7 @@
       const d = msg.data || {};
       if (d.roomId !== state.currentSector) return;
       (d.shots || []).forEach(s=>{
-        spawnBullet(s.id, d.shooterId, d.shooterName, s.x, s.y, s.angle, colorHex(d.color), d.speed, d.damage, d.square, d.team);
+        spawnBullet(s.id, d.shooterId, d.shooterName, s.x, s.y, s.angle, colorHex(d.color), d.speed, d.damage, d.square, d.team, d.pierce, s.r);
       });
     });
 
@@ -1775,19 +2203,20 @@
       spawnSpark(d.x, d.y, '#e3a857', 1);
       if (d.shooterId === state.myPeerId){
         state.score += 1;
-        state.room.presence({ score: state.score });
-        grantRandomUpgrade();
-        if (state.score === DUAL_SHOT_KILLS){
-          showToast('DUAL CANNON UNLOCKED — both barrels firing now');
+        state.streak += 1;
+        state.room.presence({ score: state.score, streak: state.streak });
+        grantStatPoint(1);
+        if (state.score === FIRST_PICK_KILLS){
+          offerLoadoutChoice(1);
         }
         if (state.score === LOADOUT7_KILLS){
           offerLoadoutChoice(7);
         }
-        if (state.score === LOADOUT14_KILLS){
-          offerLoadoutChoice(14);
+        if (state.score === PREDATOR_KILLS && ['hunter','parallel','triple','quad'].indexOf(state.loadout7) >= 0){
+          offerLoadoutChoice(20);   // Hunter: Predator/Quintet, Diagonal: Quintet/Octo, Triple or Quad: Triplet/Quad Twin
         }
-        if (state.score === LOADOUT20_KILLS){
-          offerLoadoutChoice(20);
+        if (state.score === PREDATOR_KILLS && state.loadout7 === 'overseer'){
+          showToast('CANNON: OVERLORD');
         }
       }
       renderScoreStrip();
@@ -1816,14 +2245,16 @@
     });
   }
 
-  function spawnBullet(id, shooterId, shooterName, x, y, angle, color, speed, damage, square, shooterTeam){
+  function spawnBullet(id, shooterId, shooterName, x, y, angle, color, speed, damage, square, shooterTeam, pierce, radius){
     if (state.bullets.some(b=>b.id===id)) return;
     const spd = speed || BULLET_SPEED;
     state.bullets.push({
       id, shooterId, shooterName, shooterTeam: shooterTeam || null,
       x, y, vx: Math.cos(angle)*spd, vy: Math.sin(angle)*spd,
       color, born: performance.now(), damage: damage || DAMAGE,
-      square: !!square, angle
+      square: !!square, angle,
+      pierce: pierce || 0, hitPeers: null,   // penetration: extra tanks this bullet can pass through
+      r: radius || BULLET_R
     });
   }
   function spawnSpark(x,y,color,big){
@@ -2023,7 +2454,7 @@
   // ---- input ----
   const JOY_MAX = 40; // px the nub can travel from center
 
-  function setupJoystick(rootEl, nubEl, onVec){
+  function setupJoystick(rootEl, nubEl, onVec, onActive){
     let pointerId = null;
     function apply(clientX, clientY){
       const rect = rootEl.getBoundingClientRect();
@@ -2041,10 +2472,12 @@
     function reset(){
       nubEl.style.transform = 'translate(-50%,-50%)';
       onVec(0,0,0);
+      if (onActive) onActive(false);
     }
     rootEl.addEventListener('pointerdown', (e)=>{
       pointerId = e.pointerId;
       try { rootEl.setPointerCapture(pointerId); } catch(err){}
+      if (onActive) onActive(true);
       apply(e.clientX, e.clientY);
       e.preventDefault();
     });
@@ -2072,7 +2505,7 @@
     });
     setupJoystick(byId('joyAim'), byId('joyAimNub'), (x,y,mag)=>{
       state.aimVec = {x,y,mag};
-    });
+    }, (down)=>{ state.aimTouched = down; });   // aimTouched: finger on the aim/fire stick, even before it leaves centre
   }
 
   function onKeyDown(e){
@@ -2080,6 +2513,11 @@
     if (e.target && e.target.tagName === 'INPUT') return;   // typing in the command bar
     if (e.key === '/' || e.key === 'Enter'){ e.preventDefault(); openCmd(e.key === '/' ? '/' : ''); return; }
     if (e.code === 'KeyT'){ e.preventDefault(); openChat(); return; }
+    const digitIdx = STAT_KEY_CODES.indexOf(e.code);
+    if (digitIdx !== -1){
+      if (!e.repeat) allocateStat(STATS[digitIdx].id);
+      return;
+    }
     state.keys[e.code] = true;
     if (e.code === 'Space'){ e.preventDefault(); tryFire(); }
   }
@@ -2088,20 +2526,22 @@
   function tryFire(){
     if (!state.alive) return;
     const now = performance.now();
-    if (now - state.lastShot < effectiveFireCooldown()) return;
-    const loadoutId = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank);
-    if (loadoutId === 'necro'){
-      if (state.drones.length >= MAX_DRONES) return; // 10 out at once, no more until some die
+    const loadoutId = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1);
+    const tune = LOADOUTS[loadoutId] || {};
+    if (now - state.lastShot < effectiveFireCooldown() * (tune.fireMul || 1)) return;
+    if (isDroneTank(loadoutId)){
+      if (state.drones.length >= (LOADOUTS[loadoutId].maxDrones || MAX_DRONES)) return; // cap out at once, no more until some die
       state.lastShot = now;
-      fireDrone();
+      fireDrone(loadoutId);
       return;
     }
     state.lastShot = now;
-    const spd = effectiveBulletSpeed();
-    const dmg = effectiveDamage();
+    const spd = effectiveBulletSpeed() * (tune.speedMul || 1);
+    const dmg = effectiveDamage() * (tune.dmgMul || 1);
 
     const def = LOADOUTS[loadoutId];
     const scale = TANK_R / def.radius;
+    if (def.burst){ fireBurst(def, spd, dmg, scale); return; }
     const baseRot = state.turretAngle + def.rotOffset;
     // single/dual fly straight along the aim direction (barrels just decide
     // the spawn point). triple is a genuine spread shot, each bullet
@@ -2110,7 +2550,8 @@
     // either forward or backward (whichever end of that barrel it's from)
     // rather than along the barrel's own diagonal angle.
     function shotAngleFor(barrel, tipAngle){
-      if (loadoutId === 'triple' || loadoutId === 'omni' || loadoutId === 'quad' || loadoutId === 'octo') return tipAngle;
+      if (barrel.aim !== undefined) return baseRot + barrel.aim;   // pair fires straight along its own axis
+      if (loadoutId === 'triple' || loadoutId === 'quintet' || loadoutId === 'omni' || loadoutId === 'quad' || loadoutId === 'octo' || loadoutId === 'destroyer') return tipAngle;
       if (loadoutId === 'parallel' || loadoutId === 'necro'){
         let diff = tipAngle - state.turretAngle;
         while (diff > Math.PI) diff -= Math.PI*2;
@@ -2126,18 +2567,49 @@
       const bx = state.x + Math.cos(tipAngle) * dist;
       const by = state.y + Math.sin(tipAngle) * dist;
       const id = (state.myPeerId||'me') + '-' + now.toFixed(0) + '-' + i + '-' + Math.floor(Math.random()*1000);
-      return { id, x: bx, y: by, angle: shotAngleFor(barrel, tipAngle) };
+      const jitter = def.spread ? (Math.random() - 0.5) * 2 * def.spread : 0;   // machine gun spray
+      return { id, x: bx, y: by, angle: shotAngleFor(barrel, tipAngle) + jitter };
     });
 
+    const pierce = effectivePierce();
+    const bulletR = def.bulletRadius ? def.bulletRadius * scale : BULLET_R;
+    shots.forEach(s=>{ s.r = bulletR; });
     shots.forEach(s=>{
-      spawnBullet(s.id, state.myPeerId, state.name, s.x, s.y, s.angle, state.color.hex, spd, dmg, loadoutId === 'necro', state.team);
+      spawnBullet(s.id, state.myPeerId, state.name, s.x, s.y, s.angle, state.color.hex, spd, dmg, loadoutId === 'necro', state.team, pierce, s.r);
     });
     if (state.room){
       state.room.emit('shoot', {
         shots, shooterId: state.myPeerId, shooterName: state.name,
         color: state.color.id, team: state.team, roomId: state.currentSector, speed: spd, damage: dmg,
-        square: loadoutId === 'necro'
+        square: loadoutId === 'necro', pierce
       });
+    }
+  }
+
+  // Hunter burst: `count` bullets in quick succession, growing from
+  // def.burst.min x the big barrel's bullet size up to the full size.
+  // Each bullet is spawned (and broadcast) when it fires, from wherever
+  // the tank is aiming at that moment.
+  function fireBurst(def, spd, dmg, scale){
+    const b = def.burst, pierce = effectivePierce();
+    for (let i = 0; i < b.count; i++){
+      setTimeout(()=>{
+        if (!state.alive || !state.currentSector) return;
+        const t = b.count > 1 ? i / (b.count - 1) : 1;
+        const r = def.bulletRadius * scale * (b.min + (1 - b.min) * t);
+        const a = state.turretAngle + def.rotOffset;
+        const dist = def.barrels[0].dist * scale;
+        const x = state.x + Math.cos(a) * dist, y = state.y + Math.sin(a) * dist;
+        const id = (state.myPeerId||'me') + '-' + performance.now().toFixed(0) + '-b' + i + '-' + Math.floor(Math.random()*1000);
+        spawnBullet(id, state.myPeerId, state.name, x, y, state.turretAngle, state.color.hex, spd, dmg, false, state.team, pierce, r);
+        if (state.room){
+          state.room.emit('shoot', {
+            shots: [{ id, x, y, angle: state.turretAngle, r }], shooterId: state.myPeerId, shooterName: state.name,
+            color: state.color.id, team: state.team, roomId: state.currentSector, speed: spd, damage: dmg,
+            square: false, pierce
+          });
+        }
+      }, i * b.gap);
     }
   }
 
@@ -2147,13 +2619,19 @@
   // renders them and checks whether they touched *their own* tank
   // (same trust model as bullets).
   // ---------------------------------------------------------------
-  function fireDrone(){
-    const def = LOADOUTS.necro;
+  function fireDrone(loadoutId){
+    const def = LOADOUTS[loadoutId] || LOADOUTS.necro;
     const scale = TANK_R / def.radius;
-    state.droneSide ^= 1;
-    const a = state.turretAngle + def.rotOffset + (state.droneSide ? Math.PI : 0);
-    const dist = def.barrels[0].dist * scale;
-    const spd = DRONE_SPEED_RATIO * effectiveBulletSpeed();
+    state.droneSide ^= 1; // alternate barrels: necro front/back, overseer left/right
+    let a = state.turretAngle + def.rotOffset + (loadoutId === 'overseer' ? (state.droneSide ? Math.PI/2 : -Math.PI/2) : (state.droneSide ? Math.PI : 0));
+    let dist = def.barrels[0].dist * scale;
+    if (loadoutId === 'overlord'){ // cycle through all five launchers
+      state.droneIdx = ((state.droneIdx || 0) + 1) % def.barrels.length;
+      const br = def.barrels[state.droneIdx];
+      a = state.turretAngle + def.rotOffset + br.angle;   // launchers turn with the hull
+      dist = br.dist * scale;
+    }
+    const spd = effectiveMoveSpeed();
     state.drones.push({
       id: ++state.droneSeq,
       x: state.x + Math.cos(a) * dist, y: state.y + Math.sin(a) * dist,
@@ -2172,12 +2650,13 @@
 
   function updateDrones(dt){
     const hud = byId('droneCount');
-    const isNecro = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank) === 'necro';
-    hud.textContent = (isNecro && state.currentSector) ? 'DRONES ' + state.drones.length + '/' + MAX_DRONES : '';
+    const isNecro = isDroneTank(resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1));
+    const droneCap = LOADOUTS[resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1)].maxDrones || MAX_DRONES;
+    hud.textContent = (isNecro && state.currentSector) ? 'DRONES ' + state.drones.length + '/' + droneCap : '';
     if (!state.drones.length) return;
     const now = performance.now();
     const half = DRONE_SIZE / 2;
-    const speed = DRONE_SPEED_RATIO * effectiveBulletSpeed();
+    const speed = effectiveMoveSpeed();
     // enemy positions as seen on screen
     const enemies = [];
     peersIn(state.currentSector).forEach(p=>{
@@ -2188,24 +2667,68 @@
       enemies.push({ x, y });
     });
     const k = 1 - Math.exp(-dt / 0.12); // steering smoothness
+    // Overlord: no auto-chase. While the aim/fire joystick is held, ALL drones fly to the point the
+    // stick points at (farther push = farther point); released, they hover around the tank.
+    const manual = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1) === 'overlord';
+    let ctrlPt = null;
+    if (manual && state.aimVec.mag > 0.12){
+      const reach = Math.max(GRID_SIZE * 3, state.aimVec.mag * DRONE_CTRL_REACH);
+      ctrlPt = { x: state.x + state.aimVec.x * reach, y: state.y + state.aimVec.y * reach };
+    }
+    // Separation: drones within this range of a sibling get pushed apart,
+    // so a full swarm chasing the same target spreads into a cluster
+    // instead of stacking directly on top of each other.
+    const SEP_RADIUS = DRONE_SIZE * 2.2;
+    const SEP_STRENGTH = 1.15;
+    // Keep clear of my own hull so drones never overlap/collide with my tank.
+    const TANK_AVOID_RADIUS = TANK_R + half + 4;
+    // Idle hover ring: fixed at 2 grid squares out from the necromancer
+    // (drones may overlap each other on the ring; only the separation from
+    // the necromancer's own hull above is enforced).
+    const ORBIT_RADIUS = GRID_SIZE * 2;
     state.drones = state.drones.filter((d, i)=>{
       let best = null, bd = DRONE_RANGE * DRONE_RANGE;
-      for (const e of enemies){
+      if (manual) best = ctrlPt;
+      else for (const e of enemies){
         const dx = e.x - d.x, dy = e.y - d.y, dd = dx*dx + dy*dy;
         if (dd < bd){ bd = dd; best = e; }
       }
       let tx, ty, sp;
       if (best){
-        tx = best.x; ty = best.y; sp = speed;             // chase
+        tx = best.x; ty = best.y; sp = manual ? speed * 1.25 : speed;   // chase (Overlord drones are a bit faster)
       } else {
-        // nothing in range: hover around the owner
+        // nothing in range: hover in a circle around the owner, kept at
+        // least 2 grid squares out so they never sit near the hull
         const oa = now / 1000 * 0.9 + d.id * 2.399;
-        tx = state.x + Math.cos(oa) * 46; ty = state.y + Math.sin(oa) * 46; sp = speed * 0.8;
+        tx = state.x + Math.cos(oa) * ORBIT_RADIUS;
+        ty = state.y + Math.sin(oa) * ORBIT_RADIUS;
+        sp = speed * 0.8;
       }
       const dx = tx - d.x, dy = ty - d.y, len = Math.hypot(dx, dy) || 1;
-      const want = best ? sp : Math.min(sp, len * 5);
-      d.vx += (dx/len * want - d.vx) * k;
-      d.vy += (dy/len * want - d.vy) * k;
+      const want = (best && !manual) ? sp : Math.min(sp, len * 5);   // manual drones ease in to the target point
+      let wx = dx/len * want, wy = dy/len * want;
+      // sibling separation only applies while chasing -- on the idle ring
+      // drones just follow their own ring position, so they can overlap
+      if (best){
+        for (const other of state.drones){
+          if (other === d) continue;
+          const ox = d.x - other.x, oy = d.y - other.y, odist = Math.hypot(ox, oy);
+          if (odist > 0 && odist < SEP_RADIUS){
+            const push = (1 - odist / SEP_RADIUS) * sp * SEP_STRENGTH;
+            wx += (ox / odist) * push; wy += (oy / odist) * push;
+          }
+        }
+      }
+      // push off my own hull if a drone drifts too close to it
+      {
+        const hx = d.x - state.x, hy = d.y - state.y, hdist = Math.hypot(hx, hy);
+        if (hdist > 0 && hdist < TANK_AVOID_RADIUS){
+          const push = (1 - hdist / TANK_AVOID_RADIUS) * sp * SEP_STRENGTH;
+          wx += (hx / hdist) * push; wy += (hy / hdist) * push;
+        }
+      }
+      d.vx += (wx - d.vx) * k;
+      d.vy += (wy - d.vy) * k;
       d.x += d.vx * dt; d.y += d.vy * dt;
       if (Math.hypot(d.vx, d.vy) > 20) d.ang = Math.atan2(d.vy, d.vx);
       // touching any wall (arena edge or obstacle) kills the drone
@@ -2252,7 +2775,7 @@
         state.consumedDrones[key] = now + 2000;
         spawnSpark(x, y, colorHex(p.presence.color));
         if (state.room) state.room.emit('droneHit', { roomId: state.currentSector, ownerId: p.peer, droneId: dr[0] });
-        applyDamage(p.peer, p.presence.name || 'OPERATOR', p.presence.droneDmg || DAMAGE);
+        applyDamage(p.peer, p.presence.name || 'OPERATOR', p.presence.droneDmg || DAMAGE * 2);
         if (!state.alive) return;
       }
     }
@@ -2260,22 +2783,19 @@
 
   function drawDrone(x, y, ang, color, hp, maxHp){
     const h = DRONE_SIZE / 2;
+    const r = DRONE_SIZE * 0.62; // triangle "radius", tuned to roughly match the old square's footprint
     ctx.save();
     ctx.translate(x, y); ctx.rotate(ang);
+    ctx.beginPath();
+    ctx.moveTo(r, 0);
+    ctx.lineTo(-r * 0.7, r * 0.85);
+    ctx.lineTo(-r * 0.7, -r * 0.85);
+    ctx.closePath();
     ctx.fillStyle = color;
-    ctx.fillRect(-h, -h, DRONE_SIZE, DRONE_SIZE);
+    ctx.fill();
     ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2;
-    ctx.strokeRect(-h, -h, DRONE_SIZE, DRONE_SIZE);
+    ctx.stroke();
     ctx.restore();
-    // health bar (same look as the tank bar, just smaller)
-    if (hp !== undefined && maxHp){
-      const barW = DRONE_SIZE * 1.5, bx = x - barW/2, by = y - h - 7;
-      ctx.fillStyle = canvasPalette().healthTrack;
-      ctx.fillRect(bx, by, barW, 3);
-      const f = Math.max(0, hp) / maxHp;
-      ctx.fillStyle = f > 0.5 ? '#6ee39a' : (f > 0.2 ? '#e3a857' : '#e35e6e');
-      ctx.fillRect(bx, by, barW * f, 3);
-    }
   }
 
   function rectCircleCollide(cx, cy, r, rect){
@@ -2388,6 +2908,14 @@
     updateRemoteDrones(dt);
     if (state.alive) updateDrones(dt);
     if (state.alive){
+      const regenRate = effectiveRegenPerSec();
+      if (regenRate > 0 && state.hp < effectiveMaxHp()){
+        const beforeFloor = Math.floor(state.hp);
+        state.hp = Math.min(effectiveMaxHp(), state.hp + regenRate * dt);
+        if (Math.floor(state.hp) !== beforeFloor){
+          byId('hudSelfHealth').textContent = 'HP ' + Math.floor(state.hp) + ' / ' + effectiveMaxHp();
+        }
+      }
       updateFlags();
       let dx = state.moveVec.mag > 0.12 ? state.moveVec.x : 0;
       let dy = state.moveVec.mag > 0.12 ? state.moveVec.y : 0;
@@ -2402,22 +2930,40 @@
         const ny = state.y + (dy/len) * effectiveMoveSpeed() * dt;
         if (canOccupy(nx, state.y)) state.x = nx;
         if (canOccupy(state.x, ny)) state.y = ny;
+        state.moveAngle = Math.atan2(dy, dx);
+        // Overlord only: the move stick turns the hull to face the direction of travel
+        // (turretAngle is what gets drawn and synced to other players)
+        if (resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1) === 'overlord')
+          state.turretAngle = state.moveAngle;
       }
+
+      checkTankRamDamage();
 
       updateHazardZone();
 
       if (state.aimVec.mag > 0.12){
-        state.turretAngle = Math.atan2(state.aimVec.y, state.aimVec.x);
+        if (resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1) !== 'overlord')
+          state.turretAngle = Math.atan2(state.aimVec.y, state.aimVec.x);   // Overlord: the aim joystick steers drones, the MOVE stick turns the hull
         tryFire();
       }
+      // Overlord: drones refill (up to 10) whenever you move or touch the aim/fire stick
+      if ((dx !== 0 || dy !== 0 || state.aimTouched) &&
+          resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1) === 'overlord') tryFire();
+
+      // Predator stealth: hidden unless moving or shooting (burst + 0.5s afterglow)
+      const stealthNow = performance.now();
+      const isPredator = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1) === 'predator';
+      state.stealthHidden = isPredator && dx === 0 && dy === 0 && (stealthNow - state.lastShot > 1000);
+      state.selfAlpha += ((state.stealthHidden ? 0.28 : 1) - state.selfAlpha) * Math.min(1, dt * 8);
 
       const nowMs = performance.now();
       if (state.room && (nowMs - state.lastPresenceSend > 50)){
         state.lastPresenceSend = nowMs;
-        const patch = { x: state.x, y: state.y, turretAngle: state.turretAngle };
+        const patch = { x: state.x, y: state.y, turretAngle: state.turretAngle, hidden: !!state.stealthHidden };
+        if (effectiveRegenPerSec() > 0) patch.hp = Math.floor(state.hp);
         if (state.drones.length || state.dronesSent){
           patch.drones = state.drones.map(d=>[d.id, Math.round(d.x*10)/10, Math.round(d.y*10)/10, Math.round(d.ang*100)/100, d.hp, d.maxHp]);
-          patch.droneDmg = effectiveDamage();
+          patch.droneDmg = effectiveDamage() * 2; // drones hit twice as hard as bullets
           state.dronesSent = state.drones.length > 0;
         }
         state.room.presence(patch);
@@ -2432,41 +2978,31 @@
       b.x += b.vx * dt; b.y += b.vy * dt;
       if (b.x < 0 || b.x > ARENA_W || b.y < 0 || b.y > ARENA_H){ spawnSpark(b.x,b.y,b.color); return false; }
       for (const o of OBSTACLES){
-        if (rectCircleCollide(b.x,b.y,BULLET_R,o)){ spawnSpark(b.x,b.y,b.color); return false; }
+        if (rectCircleCollide(b.x,b.y,b.r||BULLET_R,o)){ spawnSpark(b.x,b.y,b.color); return false; }
       }
-      // bullets stop against drones; the drone's owner applies the damage
-      for (const d of state.drones){
-        if (b.shooterId === state.myPeerId) break;
-        const dx = b.x - d.x, dy = b.y - d.y, r = DRONE_SIZE/2 + BULLET_R;
-        if (dx*dx + dy*dy < r*r){
-          d.hp -= (b.damage || DAMAGE);
-          spawnSpark(b.x, b.y, b.color);
-          return false;
-        }
-      }
-      for (const p of allPeers){
-        if (p.isMe || p.peer === b.shooterId || !Array.isArray(p.presence.drones)) continue;
-        for (const dr of p.presence.drones){
-          const s = state.remoteDrones[p.peer + ':' + dr[0]];
-          const dx = b.x - (s ? s.x : dr[1]), dy = b.y - (s ? s.y : dr[2]), r = DRONE_SIZE/2 + BULLET_R;
-          if (dx*dx + dy*dy < r*r){ spawnSpark(b.x, b.y, b.color); return false; }
-        }
-      }
-      // visual stop against any tank in the sector
+      // drones are immune to bullets -- bullets pass straight through them
+      // visual stop against any tank in the sector (unless this bullet still
+      // has penetration charges left, in which case it keeps flying and
+      // just can't hit the same tank twice)
       for (const p of allPeers){
         if (p.presence.alive === false) continue;
         // team modes: bullets pass straight through teammates, no friendly fire
         if (b.shooterTeam && p.presence.team && b.shooterTeam === p.presence.team) continue;
+        if (b.hitPeers && b.hitPeers.has(p.peer)) continue; // already pierced through this one
         const ps = p.isMe ? null : state.remoteSmooth[p.peer];
         const px = p.isMe ? state.x : (ps ? ps.x : p.presence.x), py = p.isMe ? state.y : (ps ? ps.y : p.presence.y);
         if (px===undefined||py===undefined) continue;
         const dx = b.x-px, dy = b.y-py;
-        if (dx*dx+dy*dy < (TANK_R+BULLET_R)*(TANK_R+BULLET_R)){
+        if (dx*dx+dy*dy < (TANK_R+(b.r||BULLET_R))*(TANK_R+(b.r||BULLET_R))){
           spawnSpark(b.x,b.y,b.color);
           if (p.isMe && state.alive && b.shooterId !== state.myPeerId){
             applyDamage(b.shooterId, b.shooterName, b.damage);
           }
-          return false;
+          if ((b.pierce||0) <= 0) return false;
+          b.pierce -= 1;
+          if (!b.hitPeers) b.hitPeers = new Set();
+          b.hitPeers.add(p.peer);
+          break; // resolve at most one hit per frame, then keep flying
         }
       }
       return true;
@@ -2484,6 +3020,46 @@
     if (x < TANK_R || x > ARENA_W-TANK_R || y < TANK_R || y > ARENA_H-TANK_R) return false;
     for (const o of OBSTACLES){ if (rectCircleCollide(x,y,TANK_R,o)) return false; }
     return true;
+  }
+
+  // Tank-vs-tank ramming: when two hulls overlap, BOTH tanks take damage.
+  // Self-authoritative like every other hit in this game -- each client only
+  // ever damages itself (never a remote peer directly), so the other tank's
+  // own client independently notices the same overlap and damages itself the
+  // same way. A per-peer cooldown stops it from melting HP every frame while
+  // stuck together, and a gentle separation push keeps tanks from sitting
+  // permanently overlapped.
+  function checkTankRamDamage(){
+    if (!state.alive) return;
+    const now = performance.now();
+    const RAM_DIST = TANK_R * 2; // hulls touching
+    for (const p of peersIn(state.currentSector)){
+      if (p.isMe) continue;
+      if (p.presence.alive === false) continue;
+      // team modes: no friendly fire between ramming teammates either
+      if (state.team && p.presence.team && state.team === p.presence.team) continue;
+      const ps = state.remoteSmooth[p.peer];
+      const px = ps ? ps.x : p.presence.x, py = ps ? ps.y : p.presence.y;
+      if (px===undefined||py===undefined) continue;
+      const dx = state.x-px, dy = state.y-py;
+      const distSq = dx*dx+dy*dy;
+      if (distSq >= RAM_DIST*RAM_DIST) continue;
+
+      const last = state.ramCooldowns[p.peer] || 0;
+      if (now - last > RAM_COOLDOWN_MS){
+        state.ramCooldowns[p.peer] = now;
+        applyDamage(p.peer, p.presence.name || 'A TANK', Math.round(effectiveDamage() / 2) + effectiveBodyDamageBonus());
+      }
+
+      // push myself out of the overlap (the other client does the same on
+      // its side, so both tanks separate smoothly instead of sticking)
+      const dist = Math.sqrt(distSq) || 1;
+      const push = (RAM_DIST - dist) / 2;
+      const nx = state.x + (dx/dist) * push;
+      const ny = state.y + (dy/dist) * push;
+      if (canOccupy(nx, state.y)) state.x = nx;
+      if (canOccupy(state.x, ny)) state.y = ny;
+    }
   }
 
   // ---------------------------------------------------------------
@@ -2524,8 +3100,9 @@
     state.room.presence({ hp: state.hp });
     if (state.hp <= 0 && state.alive){
       state.alive = false;
+      state.streak = 0;
       clearMyDrones();
-      const patch = { alive: false, hp: 0 };
+      const patch = { alive: false, hp: 0, streak: 0 };
       if (state.carrying){
         // die while carrying a flag -- it returns straight home
         state.room.emit('flagEvent', { kind:'drop', team: state.carrying, name: state.name, roomId: state.currentSector });
@@ -2558,8 +3135,8 @@
       return {
         bg: '#f3f6f2',
         grid: 'rgba(31,138,82,0.10)',
-        obstacleFill: '#dbe6da',
-        obstacleStroke: '#a9bda6',
+        obstacleFill: '#c9c9c9',
+        obstacleStroke: '#8f8f8f',
         border: 'rgba(31,138,82,0.45)',
         nameText: 'rgba(22,33,26,0.85)',
         healthTrack: 'rgba(0,0,0,0.15)',
@@ -2570,8 +3147,8 @@
     return {
       bg: '#060b08',
       grid: 'rgba(110,227,154,0.06)',
-      obstacleFill: '#16241c',
-      obstacleStroke: '#2c4a3b',
+      obstacleFill: '#3b3d3c',
+      obstacleStroke: '#6a6d6b',
       border: 'rgba(110,227,154,0.35)',
       nameText: 'rgba(221,233,224,0.8)',
       healthTrack: 'rgba(0,0,0,0.5)',
@@ -2634,6 +3211,16 @@
 
   function draw(){
     if (!bgCanvas) buildBackground();
+    // Sniper & Hunter: ease the camera out to a 1.5x wider field of view (and back in when you change tank)
+    {
+      const zl = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1);
+      const targetZoom = ZOOM / ((zl === 'sniper' || zl === 'hunter') ? FOV_MULT : 1);
+      const nowZ = performance.now();
+      const dtz = Math.min(0.1, (nowZ - (lastZoomT || nowZ)) / 1000);
+      lastZoomT = nowZ;
+      if (Math.abs(targetZoom - curZoom) > 0.0005) applyZoom(curZoom + (targetZoom - curZoom) * Math.min(1, dtz * 6));
+      else if (curZoom !== targetZoom) applyZoom(targetZoom);
+    }
     ctx.clearRect(0,0,VIEW_W,VIEW_H);
 
     // camera follows the local player, clamped so it never shows past the map edge
@@ -2651,12 +3238,18 @@
       if (p.presence.alive === false) return;
       if (p.presence.x === undefined) return;
       const s = state.remoteSmooth[p.peer] || { x: p.presence.x, y: p.presence.y, angle: p.presence.turretAngle||0 };
-      drawTank(s.x, s.y, s.angle, p.presence.color, nameLabel(p.peer, state.currentSector), p.presence.hp, p.presence.maxHp || MAX_HP, resolveLoadout(p.presence.score||0, p.presence.loadout7, p.presence.loadout14, p.presence.loadout20, p.presence.adminTank));
+      const remoteLoadout = resolveLoadout(p.presence.score||0, p.presence.loadout7, p.presence.loadout14, p.presence.loadout20, p.presence.adminTank, p.presence.loadout1);
+      // invisible Predators: teammates see a faint ghost, everyone else sees nothing
+      const ally = state.team && p.presence.team === state.team;
+      const fadeTarget = (remoteLoadout === 'predator' && p.presence.hidden) ? (ally ? 0.3 : 0) : 1;
+      const fadeCur = state.stealthFade[p.peer] === undefined ? fadeTarget : state.stealthFade[p.peer];
+      const remoteAlpha = state.stealthFade[p.peer] = fadeCur + (fadeTarget - fadeCur) * 0.15;
+      drawTank(s.x, s.y, s.angle, p.presence.color, nameLabel(p.peer, state.currentSector), p.presence.hp, p.presence.maxHp || MAX_HP, remoteLoadout, p.presence.streak||0, !!p.presence.admin, remoteAlpha);
     });
 
     // my tank
     if (state.alive){
-      drawTank(state.x, state.y, state.turretAngle, state.color.id, nameLabel(state.myPeerId, state.currentSector), state.hp, effectiveMaxHp(), resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank));
+      drawTank(state.x, state.y, state.turretAngle, state.color.id, nameLabel(state.myPeerId, state.currentSector), state.hp, effectiveMaxHp(), resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1), state.streak, state.adminUnlocked, state.selfAlpha);
     }
 
     // CTF flags (drawn above tanks so a carried flag reads clearly)
@@ -2670,13 +3263,14 @@
     // bullets
     state.bullets.forEach(b=>{
       ctx.fillStyle = b.color;
+      const br = b.r || BULLET_R;
       if (b.square){
         ctx.save();
         ctx.translate(b.x,b.y); ctx.rotate(b.angle);
-        ctx.fillRect(-BULLET_R, -BULLET_R, BULLET_R*2, BULLET_R*2);
+        ctx.fillRect(-br, -br, br*2, br*2);
         ctx.restore();
       } else {
-        ctx.beginPath(); ctx.arc(b.x,b.y,BULLET_R,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(b.x,b.y,br,0,Math.PI*2); ctx.fill();
       }
       ctx.strokeStyle = b.color; ctx.globalAlpha = 0.35; ctx.lineWidth=2;
       ctx.beginPath(); ctx.moveTo(b.x - b.vx*0.02, b.y - b.vy*0.02); ctx.lineTo(b.x,b.y); ctx.stroke();
@@ -2717,10 +3311,18 @@
     ctx.restore();
   }
 
-  function drawTank(x,y,turretAngle,colorId,name,hp,maxHp,loadoutId){
+  // Cycles the hue of admin nameplates over time so it reads as a smooth
+  // rainbow rather than a flat color -- shared by every admin tank drawn
+  // in a given frame so they all stay in sync with each other.
+  function rainbowHue(t){ return (t / 20) % 360; }
+
+  function drawTank(x,y,turretAngle,colorId,name,hp,maxHp,loadoutId,streak,isAdmin,alpha){
+    if (alpha === undefined) alpha = 1;
+    if (alpha < 0.02) return; // fully cloaked
     maxHp = maxHp || MAX_HP;
     loadoutId = LOADOUTS[loadoutId] ? loadoutId : 'single';
     ctx.save();
+    ctx.globalAlpha = alpha;
     ctx.translate(x,y);
 
     const def = LOADOUTS[loadoutId];
@@ -2729,7 +3331,7 @@
     const scale = TANK_R / def.radius;
 
     if (sprite){
-      ctx.rotate(turretAngle + def.rotOffset);
+      ctx.rotate(turretAngle + def.rotOffset);   // Overlord hull rotates with the move stick
       ctx.drawImage(
         sprite,
         -def.cx*scale, -def.cy*scale,
@@ -2742,18 +3344,29 @@
     }
 
     ctx.restore();
+    ctx.save(); ctx.globalAlpha = alpha;
 
-    // health bar + name
+    // health bar + name (+ kill streak, drawn just to the right of the name)
     const pal = canvasPalette();
+    const nameStr = name || '';
+    const nameY = y - TANK_R - 14;
     ctx.textAlign = 'center';
     ctx.font = '10px JetBrains Mono, monospace';
-    ctx.fillStyle = pal.nameText;
-    ctx.fillText(name || '', x, y - TANK_R - 14);
+    ctx.fillStyle = isAdmin ? `hsl(${rainbowHue(state.lastFrame||0)}, 90%, 60%)` : pal.nameText;
+    ctx.fillText(nameStr, x, nameY);
+    if (streak >= 2){
+      const nameW = ctx.measureText(nameStr).width;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#e3a857';
+      ctx.fillText('\u00d7' + streak, x + nameW/2 + 5, nameY);
+      ctx.textAlign = 'center';
+    }
     const barW = 34;
     ctx.fillStyle = pal.healthTrack;
     ctx.fillRect(x-barW/2, y-TANK_R-10, barW, 4);
     ctx.fillStyle = (hp>50) ? '#6ee39a' : (hp>20 ? '#e3a857' : '#e35e6e');
     ctx.fillRect(x-barW/2, y-TANK_R-10, barW * Math.max(0,(hp||0))/maxHp, 4);
+    ctx.restore();
   }
 
   function loop(t){
@@ -2783,7 +3396,7 @@
     state.bullets = []; state.sparks = []; state.killfeed = [];
     state.chatLog = []; state.chatUnread = 0; byId('chatBtn').classList.remove('has-unread');
     state.zoneEnteredAt = null; byId('zoneWarn').textContent = ''; byId('zoneWarn').classList.remove('low');
-    state.moveVec = {x:0,y:0,mag:0}; state.aimVec = {x:0,y:0,mag:0};
+    state.moveVec = {x:0,y:0,mag:0}; state.aimVec = {x:0,y:0,mag:0}; state.aimTouched = false;
     byId('joyMoveNub').style.transform = 'translate(-50%,-50%)';
     byId('joyAimNub').style.transform = 'translate(-50%,-50%)';
     clearTimeout(loadoutChoiceTimer);
@@ -2830,6 +3443,7 @@
     if (msg.type === 'adminKill'){ handleAdminKill(); return; }
     if (msg.type === 'banned'){ handleBanned(); return; }
     if (msg.type === 'adminBanList'){ showBanPanel(msg.bans || []); return; }
+    if (msg.type === 'adminBanResult'){ handleAdminBanResult(msg); return; }
     if (msg.type === 'adminUnbanResult'){ handleUnbanResult(msg); return; }
     if (msg.type === 'authResult'){ handleAuthResult(msg); return; }
     if (msg.type === 'leaderboard'){ state.leaderboard = msg.top || []; renderLeaderboard(); return; }
@@ -2927,21 +3541,21 @@
     saveSettings();
   });
   byId('themeDarkBtn').addEventListener('click', ()=>{
-    state.settings.theme = 'dark';
+    state.settings.theme = 'dark'; state.settings.themeChosen = true;
     applyTheme();
     invalidateBackground();
     saveSettings();
     refreshSettingsUI();
   });
   byId('themeLightBtn').addEventListener('click', ()=>{
-    state.settings.theme = 'light';
+    state.settings.theme = 'light'; state.settings.themeChosen = true;
     applyTheme();
     invalidateBackground();
     saveSettings();
     refreshSettingsUI();
   });
   byId('settingsResetBtn').addEventListener('click', ()=>{
-    state.settings = { moveMult: 1, bulletMult: 1, sensMult: 1, theme: 'dark' };
+    state.settings = { moveMult: 1, bulletMult: 1, sensMult: 1, theme: 'light' };
     applyTheme();
     invalidateBackground();
     saveSettings();
@@ -3086,7 +3700,7 @@
       c.fillStyle = pal.hazardFill;
       MAPS[id].hazards.forEach(z=>c.fillRect(z.x*k, z.y*k, Math.max(2,z.w*k), Math.max(2,z.h*k)));
     }
-    c.fillStyle = state.settings.theme === 'light' ? '#6f8f77' : 'rgba(110,227,154,0.6)';
+    c.fillStyle = state.settings.theme === 'light' ? '#8f8f8f' : 'rgba(170,170,170,0.6)';
     MAPS[id].obstacles.forEach(o=>c.fillRect(o.x*k, o.y*k, Math.max(2,o.w*k), Math.max(2,o.h*k)));
   }
   function refreshHostUI(){
@@ -3150,11 +3764,11 @@
   // Command bar (/ or Enter, or the "/" HUD button) + /admin tank picker
   // ---------------------------------------------------------------
   const ADMIN_TANKS = [
-    ['single','SINGLE'], ['dual','TWIN'], ['triple','TRIPLE'], ['parallel','DIAGONAL'], ['omni','OMNI'],
-    ['triplet','TRIPLET'], ['quad','QUAD'], ['necro','NECROMANCER'], ['octo','OCTO'],
+    ['single','SINGLE'], ['twin','TWIN'], ['machinegun','MACHINE GUN'], ['sniper','SNIPER'], ['gunner','GUNNER'], ['dual','OLD TWIN'], ['triple','TRIPLE'], ['parallel','DIAGONAL'], ['omni','OMNI'],
+    ['triplet','TRIPLET'], ['quad','QUAD'], ['necro','NECROMANCER'], ['octo','OCTO'], ['destroyer','DESTROYER'], ['overseer','OVERSEER'], ['hunter','HUNTER'], ['predator','PREDATOR'], ['quintet','QUINTET'], ['quadtwin','QUAD TWIN'], ['overlord','OVERLORD'],
   ];
   function openCmd(prefill){
-    if (!state.currentSector) return;
+    if (!state.room) return;
     closeChat();
     state.keys = {}; state.moveVec = {x:0,y:0,mag:0};
     const inp = byId('cmdInput');
@@ -3178,6 +3792,9 @@
     else showToast('Unknown command: ' + text.trim().slice(0,20));
   }
   byId('cmdBtn').addEventListener('click', ()=>{
+    if (byId('cmdBar').classList.contains('show')) closeCmd(); else openCmd('/');
+  });
+  byId('lobbyCmdBtn').addEventListener('click', ()=>{
     if (byId('cmdBar').classList.contains('show')) closeCmd(); else openCmd('/');
   });
   byId('cmdInput').addEventListener('keydown', (e)=>{
@@ -3220,7 +3837,7 @@
   function showAdminPlayerStep(){
     byId('adminPanelTitle').textContent = 'ADMIN \u2014 SWITCH WHOSE TANK?';
     byId('adminGrid').style.display = 'none';
-    byId('adminPlayerStep').style.display = 'block';
+    byId('adminPlayerStep').style.display = 'flex';
     renderAdminPlayerList();
   }
   function selectAdminTank(id){
@@ -3277,38 +3894,37 @@
   }
   function openLogin(err){
     byId('adminLoginErr').textContent = err || '';
-    byId('adminUserInput').value = '';
     byId('adminPassInput').value = '';
     byId('adminLoginBackdrop').classList.add('show');
-    setTimeout(()=>byId('adminUserInput').focus(), 50);
+    setTimeout(()=>byId('adminPassInput').focus(), 50);
   }
-  function closeLogin(){ byId('adminLoginBackdrop').classList.remove('show'); byId('adminUserInput').blur(); byId('adminPassInput').blur(); }
+  function closeLogin(){ byId('adminLoginBackdrop').classList.remove('show'); byId('adminPassInput').blur(); }
   function submitLogin(){
-    const user = byId('adminUserInput').value.trim();
     const pw = byId('adminPassInput').value;
-    if (!user || !pw) return;
+    if (!pw) return;
     pendingAdminOpen = true; loginViaToken = false;
-    state.room.send({ type:'adminLogin', username: user, password: pw });
+    state.room.send({ type:'adminLogin', password: pw });
   }
-  // Shows/hides the "/" HUD button itself -- non-admins can still reach the
-  // command bar via the / or Enter keyboard shortcut (that's how you get to
-  // /admin in the first place); the button is just not advertised to them.
-  function updateCmdBtnVisibility(){
-    byId('cmdBtn').style.display = state.adminUnlocked ? '' : 'none';
-  }
+  // The "/" HUD button is always visible now -- everyone can reach the
+  // command bar (chat, /admin, etc.) with it, not just unlocked admins.
+  // Left as a no-op (rather than deleted) so the existing call sites that
+  // run after an admin-state change don't need to be touched.
+  function updateCmdBtnVisibility(){}
   function handleAdminResult(msg){
     if (msg.ok){
       state.adminUnlocked = true; state.adminToken = msg.token || null;
       if (!loginViaToken && byId('adminRememberChk').checked) saveToken(msg.token);
       updateCmdBtnVisibility();
+      renderStatsPanel();
       closeLogin();
       if (pendingAdminOpen && state.currentSector){ const t = pendingCmdText; pendingCmdText = '/admin'; runCommand(t); }
       pendingAdminOpen = false; loginViaToken = false;
     } else {
       state.adminUnlocked = false; state.adminToken = null;
       updateCmdBtnVisibility();
-      if (loginViaToken){ saveToken(null); openLogin('Saved login expired \u2014 enter the username and password again.'); }
-      else byId('adminLoginErr').textContent = msg.error || 'Wrong username or password.';
+      renderStatsPanel();
+      if (loginViaToken){ saveToken(null); openLogin('Saved login expired \u2014 enter the password again.'); }
+      else byId('adminLoginErr').textContent = msg.error || 'Wrong password.';
       pendingAdminOpen = false; loginViaToken = false;
     }
   }
@@ -3316,11 +3932,11 @@
     state.adminUnlocked = false; state.adminToken = null; state.adminTank = null;
     saveToken(null); closeAdmin();
     updateCmdBtnVisibility();
+    renderStatsPanel();
     if (state.room) state.room.send({ type:'adminLogout' });
     showToast('Admin logged out');
   }
   byId('adminLoginBtn').addEventListener('click', submitLogin);
-  byId('adminUserInput').addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); submitLogin(); } else if (e.key === 'Escape') closeLogin(); });
   byId('adminPassInput').addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ e.preventDefault(); submitLogin(); } else if (e.key === 'Escape') closeLogin(); });
   byId('adminLoginCloseBtn').addEventListener('click', closeLogin);
   byId('adminLoginBackdrop').addEventListener('click', (e)=>{ if (e.target.id === 'adminLoginBackdrop') closeLogin(); });
@@ -3350,18 +3966,23 @@
     applyDamage(null, 'ADMIN', 99999);   // no shooter id, so nobody is credited with the kill
   }
 
-  // ---- /ban @player (admin only; enforced again by the server) ----
+  // ---- /ban @username (admin only; enforced again by the server) ----
+  // Works from the lobby or any room, not just the admin's own room --
+  // the server looks the name up across every connection. If the target
+  // is currently online (lobby or any room) they're banned by IP address
+  // and kicked immediately; if they're offline, their account is banned
+  // instead so they can't log back in. See handleAdminBanResult for the
+  // reply either way.
   function adminBan(query){
-    if (!state.currentSector) return;
+    if (!state.room) return;
     if (!ensureAdmin('/ban @' + query)) return;
-    if (!query){ showToast('Usage: /ban @playername'); return; }
-    const m = findPlayers(query);
-    if (!m.length){ showToast('No player "' + query.slice(0,16) + '" in this room'); return; }
-    if (m.length > 1){ showToast('Several match \u2014 use the full name, e.g. ' + nameLabel(m[0].peer, state.currentSector)); return; }
-    const target = m[0], label = nameLabel(target.peer, state.currentSector);
-    if (target.isMe){ showToast("You can't ban yourself."); return; }
-    state.room.send({ type:'adminBan', target: target.peer });
-    showToast('BANNED ' + label);
+    const username = query.replace(/^@/, '').trim();
+    if (!username){ showToast('Usage: /ban @username'); return; }
+    state.room.send({ type:'adminBan', target: username });
+  }
+  function handleAdminBanResult(msg){
+    if (msg.ok) showToast('BANNED ' + msg.username);
+    else showToast(msg.error || 'Could not ban that account.');
   }
   // The server closes our socket and stops us reconnecting; just show it.
   function handleBanned(){
@@ -3372,7 +3993,7 @@
   // ---- /banned: view + unban (unban is password-gated every time, even
   // on a device that's already unlocked -- see the server-side comment) ----
   function requestBanList(){
-    if (!state.currentSector) return;
+    if (!state.room) return;
     if (ensureAdmin('/banned')) state.room.send({ type:'adminListBans' });
   }
   function showBanPanel(bans){
@@ -3395,19 +4016,21 @@
       info.className = 'ban-info';
       const mins = Math.max(0, Math.round((Date.now() - b.bannedAt) / 60000));
       const when = mins < 1 ? 'just now' : (mins < 60 ? mins + 'm ago' : Math.round(mins/60) + 'h ago');
-      info.textContent = (b.name || 'OPERATOR') + ' \u2014 banned ' + when;
+      const label = b.kind === 'account' ? (b.username || 'ACCOUNT') + ' (account)' : (b.name || 'OPERATOR');
+      info.textContent = label + ' \u2014 banned ' + when;
       row.appendChild(info);
       const btn = document.createElement('button');
       btn.type = 'button'; btn.className = 'ban-unban-btn'; btn.textContent = 'UNBAN';
-      btn.addEventListener('click', ()=>openUnbanPrompt(b.ip, b.name));
+      btn.addEventListener('click', ()=>openUnbanPrompt(b));
       row.appendChild(btn);
       box.appendChild(row);
     });
   }
-  let pendingUnbanIp = null;
-  function openUnbanPrompt(ip, name){
-    pendingUnbanIp = ip;
-    byId('unbanPassTarget').textContent = 'PASSWORD TO UNBAN ' + (name || 'PLAYER').toUpperCase();
+  let pendingUnban = null; // { kind: 'ip'|'account', ip?, username?, name? }
+  function openUnbanPrompt(b){
+    pendingUnban = b;
+    const label = b.kind === 'account' ? b.username : b.name;
+    byId('unbanPassTarget').textContent = 'PASSWORD TO UNBAN ' + (label || 'PLAYER').toUpperCase();
     byId('unbanPassErr').textContent = '';
     byId('unbanPassInput').value = '';
     byId('unbanPassBackdrop').classList.add('show');
@@ -3416,12 +4039,15 @@
   function closeUnbanPrompt(){
     byId('unbanPassBackdrop').classList.remove('show');
     byId('unbanPassInput').blur();
-    pendingUnbanIp = null;
+    pendingUnban = null;
   }
   function submitUnban(){
     const pw = byId('unbanPassInput').value;
-    if (!pw || !pendingUnbanIp) return;
-    state.room.send({ type:'adminUnban', ip: pendingUnbanIp, password: pw });
+    if (!pw || !pendingUnban) return;
+    const payload = { type:'adminUnban', password: pw };
+    if (pendingUnban.kind === 'account') payload.username = pendingUnban.username;
+    else payload.ip = pendingUnban.ip;
+    state.room.send(payload);
   }
   function handleUnbanResult(msg){
     if (msg.ok){
@@ -3508,6 +4134,7 @@
         state.adminToken = msg.adminToken;
         if (authSubmitting && authRememberPending) saveToken(msg.adminToken);
         updateCmdBtnVisibility();
+        renderStatsPanel();
       }
       updateAccountUI();
       if (authSubmitting){ closeAuth(); showToast('Signed in as ' + msg.username + (msg.isAdmin ? ' (admin)' : '')); enterLobby(); }
@@ -3526,6 +4153,7 @@
       state.adminUnlocked = false; state.adminToken = null; state.adminTank = null;
       saveToken(null);
       updateCmdBtnVisibility();
+      renderStatsPanel();
     }
     updateAccountUI();
     if (state.room) state.room.send({ type: 'logoutAccount' });
@@ -3584,7 +4212,7 @@
   // ---- /delete @username (admin only; deletes the ACCOUNT, not just a
   // player -- enforced again server-side regardless of what this sends) ----
   function adminDeleteAccount(query){
-    if (!state.currentSector) return;
+    if (!state.room) return;
     if (!ensureAdmin('/delete @' + query)) return;
     const username = query.replace(/^@/, '').trim();
     if (!username){ showToast('Usage: /delete @username'); return; }
@@ -3604,9 +4232,9 @@
   function closeAdmin(){ byId('adminBackdrop').classList.remove('show'); }
   function setAdminTank(id){
     if (!state.adminUnlocked) return;
-    const wasNecro = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank) === 'necro';
+    const wasNecro = isDroneTank(resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1));
     state.adminTank = id || null;
-    const isNecro = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank) === 'necro';
+    const isNecro = isDroneTank(resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1));
     if (wasNecro && !isNecro) clearMyDrones();
     if (state.room) state.room.presence({ adminTank: state.adminTank });
     refreshAdminGrid();
@@ -3621,9 +4249,9 @@
     if (!mine) return;
     const remoteTank = mine.presence.adminTank || null;
     if (remoteTank === state.adminTank) return;
-    const wasNecro = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank) === 'necro';
+    const wasNecro = isDroneTank(resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1));
     state.adminTank = remoteTank;
-    const isNecro = resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank) === 'necro';
+    const isNecro = isDroneTank(resolveLoadout(state.score, state.loadout7, state.loadout14, state.loadout20, state.adminTank, state.loadout1));
     if (wasNecro && !isNecro) clearMyDrones();
     showToast('An admin switched your tank to ' + tankLabelOf(state.adminTank));
     if (byId('adminBackdrop').classList.contains('show')) refreshAdminGrid();
